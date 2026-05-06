@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 app = Flask(__name__)
 load_dotenv()
 CORS(app, resources={r"/*": {"origins": "*"}})
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///hallbooking.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres.bdgmhmoechjhgjdznven:16th%40august%7C2004@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
