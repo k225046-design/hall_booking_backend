@@ -1,0 +1,58 @@
+after importing flask
+
+        jsonifyLogin/Register form ka data
+        Success ya error ka message
+	Bookings ka list ya hall detail
+
+
+
+from flask_cors import CORS
+
+app = Flask(__name__)
+CORS(app) 
+
+
+users = []
+
+------------------Register Endpoint ------------------
+@app.route('/register', methods=['POST'])
+def register():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+
+  >   Check if user already exists
+    for user in users:
+        if user['email'] == email:
+            return jsonify({'status': 'error', 'message': 'User already exists'}), 400
+
+  > user add krne k liye
+    users.append({'email': email, 'password': password})
+    return jsonify({'status': 'success', 'message': 'User registered successfully'})
+
+
+
+ ------------------ Login Endpoint ------------------
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+
+    for user in users:
+        if user['email'] == email and user['password'] == password:
+            return jsonify({'status': 'success', 'message': 'Login successful'})
+    
+    return jsonify({'status': 'error', 'message': 'Invalid credentials'}), 401
+
+
+ ------------------ Run Flask App ------------------
+if __name__ == '__main__':
+    app.run(debug=True)
+
+
+Example
+{
+    "email": "mufrah@gmail.com",
+    "password": "123456"
+}

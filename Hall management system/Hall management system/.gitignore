@@ -1,0 +1,9 @@
+.runtime_venv/
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.log
+instance/
+hall_booking_app/.dart_tool/
+hall_booking_app/build/

@@ -1,0 +1,10 @@
+{
+  "dart.flutterSdkPath": "C:/flutter",
+  "dart.openDevTools": "flutter",
+  "dart.projectSearchDepth": 3,
+  "terminal.integrated.cwd": "${workspaceFolder}/Hall management system/hall_booking_app",
+  "files.exclude": {
+    "**/.dart_tool": true,
+    "**/build": true
+  }
+}

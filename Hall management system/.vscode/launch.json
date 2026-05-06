@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Flutter Chrome",
+      "type": "dart",
+      "request": "launch",
+      "flutterMode": "debug",
+      "deviceId": "chrome",
+      "cwd": "${workspaceFolder}/Hall management system/hall_booking_app",
+      "program": "${workspaceFolder}/Hall management system/hall_booking_app/lib/main.dart",
+      "preLaunchTask": "Start Backend"
+    }
+  ]
+}

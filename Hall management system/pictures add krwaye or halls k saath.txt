@@ -1,0 +1,3340 @@
+-------------------------frontend--------------------------------------
+
+
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:async';
+import 'dart:ui';
+
+import 'package:table_calendar/table_calendar.dart';
+import 'package:intl/intl.dart';
+
+import 'package:flutter_calendar_carousel/flutter_calendar_carousel.dart' show CalendarCarousel;
+import 'package:flutter_calendar_carousel/classes/event.dart'; 
+
+import 'customerprofilepage.dart';
+
+import 'package:carousel_slider/carousel_slider.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
+void main() => runApp(MyApp());
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Shaadi Ghar',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primarySwatch: Colors.pink,
+        fontFamily: GoogleFonts.poppins().fontFamily,
+      ),
+      home: SplashScreen(),
+      routes: {
+        '/login': (context) => AuthScreen(),  // ← here
+        '/admin': (context) => AdminDashboard(),
+      },
+    );
+  }
+}
+
+class SplashScreen extends StatefulWidget {
+  @override
+  _SplashScreenState createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Timer(Duration(seconds: 4), () {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => LandingPage()),
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage("assets/how-design-beautiful-banquet-hall-600nw-2478862169.webp"),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          Container(
+            color: Colors.black.withOpacity(0.6),
+          ),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Welcome to",
+                    style: GoogleFonts.poppins(
+                      fontSize: 22,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w300,
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    "Shaadi Ghar",
+                    style: GoogleFonts.playfairDisplay(
+                      fontSize: 40,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(height: 14),
+                  Text(
+                    "Celebrate your dream wedding with beautiful venues and easy booking!",
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 30),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (_) => LandingPage()),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.pinkAccent,
+                      padding: EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    child: Text(
+                      "Get Started",
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  )
+                ],
+              ),
+            ),
+          )
+        ],
+      ),
+    );
+  }
+}
+
+class LandingPage extends StatelessWidget {
+  final List<String> featuredImages = [
+    'assets/hall_id_1.jpg',
+    'assets/hall_id_2.jpg',
+    'assets/hall_id_3.jpg',
+    'assets/hall_id_4.jpg',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.pink[50],
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.pink[300],
+        centerTitle: true,
+        title: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            '💒 Shaadi Ghar Booking App',
+            style: GoogleFonts.dancingScript(
+              fontWeight: FontWeight.w700,
+              fontSize: 26,
+            ),
+          ),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: TextButton(
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.indigo,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => AuthScreen(initialLogin: true),
+                  ),
+                );
+              },
+              child: Text('Login', style: TextStyle(color: Colors.white)),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: TextButton(
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.purple,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => AuthScreen(initialLogin: false),
+                  ),
+                );
+              },
+              child: Text('Register', style: TextStyle(color: Colors.white)),
+            ),
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            SizedBox(height: 16),
+            CarouselSlider(
+              options: CarouselOptions(
+                height: 220,
+                autoPlay: true,
+                enlargeCenterPage: true,
+              ),
+              items: featuredImages.map((img) {
+                return Builder(
+                  builder: (context) => Container(
+                    margin: EdgeInsets.symmetric(horizontal: 8),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 6,
+                        ),
+                      ],
+                    ),
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => HallDetailPage(
+                              title: 'Elegant Hall',
+                              image: img,
+                              price: 'Rs. 150,000',
+                              capacity: '800 Guests',
+                              location: 'Karachi',
+                              email: 'guest@example.com', // Default email for guest view
+                              hallId: 1, // Default hall ID
+                              customerName: 'Guest User', // Default name
+                              customerContact: '03001234567', // Default contact
+                            ),
+                          ),
+                        );
+                      },
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: Image.asset(img,
+                            fit: BoxFit.cover, width: double.infinity),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            SizedBox(height: 24),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Explore by Category",
+                  style: GoogleFonts.poppins(
+                      fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  categoryChip('Indoor'),
+                  categoryChip('Outdoor'),
+                  categoryChip('Luxury'),
+                  categoryChip('Budget'),
+                  categoryChip('Wedding'),
+                  categoryChip('Birthday'),
+                ],
+              ),
+            ),
+            SizedBox(height: 16),
+            Text("Top Rated Halls",
+                style: GoogleFonts.poppins(
+                    fontSize: 20, fontWeight: FontWeight.bold)),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: featuredImages.length,
+              padding: EdgeInsets.all(16),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+              ),
+              itemBuilder: (context, index) => GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => HallDetailPage(
+                        title: 'Hall #${index + 1}',
+                        image: featuredImages[index],
+                        price: 'Rs. ${(index + 1) * 50000}',
+                        capacity: '${(index + 1) * 100} Guests',
+                        location: 'City ${index + 1}',
+                        email: 'guest@example.com', // Default email for guest view
+                        hallId: index + 1, // Default hall ID
+                        customerName: 'Guest User', // Default name
+                        customerContact: '03001234567', // Default contact
+                      ),
+                    ),
+                  );
+                },
+                child: Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ClipRRect(
+                        borderRadius:
+                            BorderRadius.vertical(top: Radius.circular(16)),
+                        child: Image.asset(
+                          featuredImages[index],
+                          height: 90, // reduced from 100
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8.0, vertical: 4.0), // reduced padding
+                        child: Text('Hall #${index + 1}',
+                            style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.bold)),
+                      )
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: 20),
+            Container(
+              width: double.infinity,
+              color: Colors.pink[100],
+              padding: EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Contact Us",
+                      style: GoogleFonts.poppins(
+                          fontSize: 18, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 8),
+                  Text("Email: support@weddinghalls.pk"),
+                  Text("Phone: +92-300-1234567"),
+                  SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Icon(FontAwesomeIcons.facebook, color: Colors.indigo),
+                      SizedBox(width: 12),
+                      Icon(FontAwesomeIcons.instagram, color: Colors.purple),
+                      SizedBox(width: 12),
+                      Icon(FontAwesomeIcons.globe, color: Colors.teal),
+                    ],
+                  )
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget categoryChip(String label) {
+    return Chip(
+      label: Text(label),
+      labelStyle:
+          GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500),
+      backgroundColor: Colors.pink[100],
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      shape: StadiumBorder(side: BorderSide(color: Colors.pink)),
+    );
+  }
+}
+
+class HallDetailPage extends StatelessWidget {
+  final String title;
+  final String image;
+  final String price;
+  final String capacity;
+  final String location;
+  final List<String>? images;
+  final String email;
+  final int hallId;
+  final String customerName;
+  final String customerContact;
+
+  HallDetailPage({
+    required this.title,
+    required this.image,
+    required this.price,
+    required this.capacity,
+    required this.location,
+    this.images,
+    required this.email,
+    required this.hallId,
+    required this.customerName,
+    required this.customerContact,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.pink[50],
+      appBar: AppBar(
+        title: Text(title, style: GoogleFonts.poppins(fontSize: 18)),
+        backgroundColor: Colors.pink[300],
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (images != null && images!.length >= 3)
+              SizedBox(
+                height: 200,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: 3,
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.asset(
+                          images![index],
+                          fit: BoxFit.cover,
+                          width: 200,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            SizedBox(height: 14),
+            Text(
+              title,
+              style: GoogleFonts.poppins(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 8),
+            infoRow("💰 Price", price),
+            infoRow("👥 Capacity", capacity),
+            infoRow("📍 Location", location),
+            infoRow("🎉 Suitable For", "Weddings, Parties, Birthdays, Corporate Events"),
+            SizedBox(height: 18),
+            Center(
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.indigo,
+                  padding: EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => CalendarBookingPage(
+                        email: email,
+                        hallId: hallId,
+                        hallName: title,
+                        customerName: customerName,
+                        customerContact: customerContact,
+                      ),
+                    ),
+                  );
+                },
+                child: Text("Book Now", style: TextStyle(color: Colors.white)),
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget infoRow(String label, String value) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(Icons.check_circle, color: Colors.pink[300], size: 18),
+          SizedBox(width: 8),
+          Text(
+            "$label: ",
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: GoogleFonts.poppins(fontSize: 14),
+            )
+          )
+        ]
+      )
+    );
+  }
+}
+
+const String baseUrl = 'http://172.16.110.55:5000'; 
+
+List<dynamic> allBookings = [];
+List<dynamic> allHalls = [];
+
+class AvailableHallsPage extends StatefulWidget {
+  final String email;
+  final String customerName;
+  final String customerContact;
+
+  AvailableHallsPage({
+    required this.email,
+    required this.customerName,
+    required this.customerContact,
+  });
+
+  @override
+  _AvailableHallsPageState createState() => _AvailableHallsPageState();
+}
+
+class _AvailableHallsPageState extends State<AvailableHallsPage> {
+  final List<Map<String, dynamic>> dummyHalls = [
+    {
+      "hall_id": 1,
+      "name": "Galaxy Banquet",
+      "rent": 80000,
+      "image": "assets/hall_id_1.jpg",
+      "images": [
+        "assets/images/halls/galaxy/hall1.jpg",
+        "assets/images/halls/galaxy/hall2.jpg",
+        "assets/images/halls/galaxy/hall3.jpg",
+      ],
+    },
+    {
+      "hall_id": 2,
+      "name": "Pearl Palace",
+      "rent": 65000,
+      "image": "assets/hall_id_2.jpg",
+      "images": [
+        "assets/images/halls/pearl_palace/hall1.jpg",
+        "assets/images/halls/pearl_palace/hall2.jpg",
+        "assets/images/halls/pearl_palace/hall3.jpg"
+      ]
+    },
+    {
+      "hall_id": 3,
+      "name": "Royal Fort",
+      "rent": 90000,
+      "image": "assets/hall_id_3.jpg",
+      "images": [
+        "assets/images/halls/royal_fort/hall1.jpg",
+        "assets/images/halls/royal_fort/hall2.jpg",
+        "assets/images/halls/royal_fort/hall3.jpg",
+      ],
+    },
+    {
+      "hall_id": 4,
+      "name": "Dream Garden",
+      "rent": 70000,
+      "image": "assets/hall_id_4.jpg",
+      "images": [
+        "assets/images/halls/dream_garden/hall1.jpg",
+        "assets/images/halls/dream_garden/hall2.jpg",
+        "assets/images/halls/dream_garden/hall3.jpg",
+      ],
+    },
+    {
+      "hall_id": 5,
+      "name": "Sunshine Villa",
+      "rent": 75000,
+      "image": "assets/hall_id_5.jpg",
+      "images": [
+        "assets/images/halls/sunshine_villa/hall1.jpg",
+        "assets/images/halls/sunshine_villa/hall2.jpg",
+        "assets/images/halls/sunshine_villa/hall3.jpg",
+      ],
+    },
+  ];
+
+  String get email => widget.email;
+  String get customerName => widget.customerName;
+  String get customerContact => widget.customerContact;
+
+  Future<Map<int, List<String>>> fetchAllHallAvailability() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://172.16.110.55:5000/all_halls/availability'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return data.map((key, value) =>
+            MapEntry(int.parse(key), List<String>.from(value)));
+      } else {
+        throw Exception("❌ Failed to load hall availability");
+      }
+    } catch (e) {
+      print("Error fetching availability: $e");
+      return {};
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currencyFormat =
+        NumberFormat.currency(locale: 'en_IN', symbol: 'Rs. ');
+
+    return Scaffold(
+      backgroundColor: Colors.pink[50],
+      appBar: AppBar(
+        title: const Text("Available Halls"),
+        backgroundColor: Colors.pink[300],
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: ListView.builder(
+        itemCount: dummyHalls.length,
+        itemBuilder: (context, index) {
+          final hall = dummyHalls[index];
+          return Card(
+            margin: const EdgeInsets.all(12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            elevation: 6,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => HallDetailPage(
+                      title: hall['name'],
+                      image: hall['image'],
+                      price: currencyFormat.format(hall['rent']),
+                      capacity: '${(index + 1) * 100} Guests',
+                      location: 'City ${index + 1}',
+                      images: hall['images'] != null && hall['images'] is List
+                          ? List<String>.from(hall['images'])
+                          : [hall['image']],
+                      email: widget.email,
+                      hallId: hall['hall_id'],
+                      customerName: widget.customerName,
+                      customerContact: widget.customerContact,
+                    ),
+                  ),
+                );
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ClipRRect(
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(16)),
+                    child: Image.asset(
+                      hall['image'],
+                      height: 160,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        print('Image load error: ${hall['image']}, $error');
+                        return Container(
+                          height: 160,
+                          width: double.infinity,
+                          color: Colors.grey[300],
+                          child: const Center(
+                            child: Text(
+                              'Image not found',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              hall['name'],
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.pink[900],
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "Rent: ${currencyFormat.format(hall['rent'])}",
+                              style: const TextStyle(color: Colors.black54),
+                            ),
+                          ],
+                        ),
+                        const Icon(Icons.touch_app_rounded, color: Colors.pink),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class HallImagesPage extends StatelessWidget {
+  final String hallName;
+  final List<String> images;
+
+  HallImagesPage({required this.hallName, required this.images});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('$hallName Images')),
+      body: ListView.builder(
+        itemCount: images.length,
+        itemBuilder: (context, index) {
+          return Padding(
+            padding: EdgeInsets.all(8),
+            child: Image.asset(images[index], fit: BoxFit.cover),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// Add your AuthScreen, CalendarBookingPage, and AdminDashboard classes here
+// Make sure to define the baseUrl in AuthScreen and AdminDashboard as well
+
+class CustomerDashboard extends StatefulWidget {
+  final String email;
+  final String? profileImage;
+  final String? name;
+
+  CustomerDashboard({
+    required this.email,
+    this.profileImage,
+    this.name,
+  });
+
+  @override
+  _CustomerDashboardState createState() => _CustomerDashboardState();
+}
+
+class _CustomerDashboardState extends State<CustomerDashboard> {
+  String? updatedProfileImage;
+  String displayName = "";
+  final String baseUrl = "http://172.16.110.71:5000";
+
+  @override
+  void initState() {
+    super.initState();
+    updatedProfileImage = widget.profileImage;
+
+    if (widget.name != null && widget.name!.isNotEmpty) {
+      displayName = widget.name!;
+    } else {
+      fetchCustomerName();
+    }
+  }
+
+  Future<void> fetchCustomerName() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/get_user_name/${widget.email}'));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          displayName = data['name'] ?? formatNameFromEmail(widget.email);
+        });
+      } else {
+        setState(() {
+          displayName = formatNameFromEmail(widget.email);
+        });
+      }
+    } catch (_) {
+      setState(() {
+        displayName = formatNameFromEmail(widget.email);
+      });
+    }
+  }
+
+  String formatNameFromEmail(String email) {
+    try {
+      final parts = email.split('@')[0].split('.');
+      return parts.map((e) => e[0].toUpperCase() + e.substring(1)).join(' ');
+    } catch (_) {
+      return "User";
+    }
+  }
+
+  void confirmLogout(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text("Logout", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        content: Text("Are you sure you want to logout?", style: GoogleFonts.poppins()),
+        actions: [
+          TextButton(
+            child: Text("Cancel", style: GoogleFonts.poppins()),
+            onPressed: () => Navigator.of(ctx).pop(),
+          ),
+          ElevatedButton.icon(
+            icon: Icon(Icons.logout),
+            label: Text("Logout", style: GoogleFonts.poppins()),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void goToProfile(BuildContext context) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CustomerProfilePage(
+          email: widget.email,
+          name: displayName,
+          profileImage: updatedProfileImage,
+        ),
+      ),
+    );
+
+    if (result != null && mounted) {
+      try {
+        final updateRes = await http.put(
+          Uri.parse('$baseUrl/update_profile_image'),
+          headers: {"Content-Type": "application/json"},
+          body: jsonEncode({
+            "email": widget.email,
+            "profile_image": result,
+          }),
+        );
+
+        if (updateRes.statusCode == 200) {
+          setState(() {
+            updatedProfileImage = '$baseUrl$result';
+          });
+        }
+      } catch (e) {
+        print("❌ Error updating profile image: $e");
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final String customerName = displayName;
+    final String customerContact = "03123456789"; // optional to make dynamic
+
+    return Scaffold(
+      backgroundColor: Colors.pink[50],
+      appBar: AppBar(
+        title: Text("🎉 Customer Dashboard", style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+        centerTitle: true,
+        backgroundColor: Colors.pink[300],
+        elevation: 10,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.person),
+            tooltip: 'My Profile',
+            onPressed: () => goToProfile(context),
+          ),
+        ],
+      ),
+      body: Stack(
+        children: [
+          Center(
+            child: Container(
+              padding: EdgeInsets.all(24),
+              margin: EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.95),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 25,
+                    offset: Offset(0, 12),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  updatedProfileImage != null && updatedProfileImage!.isNotEmpty
+                      ? CircleAvatar(
+                          radius: 50,
+                          backgroundImage: NetworkImage(updatedProfileImage!),
+                        )
+                      : CircleAvatar(
+                          radius: 50,
+                          backgroundColor: Colors.pink[100],
+                          child: Icon(Icons.person, size: 50, color: Colors.white),
+                        ),
+                  SizedBox(height: 10),
+                  Text(
+                    'Welcome, ${displayName.split(" ").first}!',
+                    style: GoogleFonts.poppins(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.pink[900],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 30),
+
+                  // Book a Hall
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(double.infinity, 60),
+                      backgroundColor: Colors.pink,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 5,
+                      shadowColor: Colors.pinkAccent,
+                    ),
+                    icon: Icon(Icons.calendar_month),
+                    label: Text("Book a Hall", style: GoogleFonts.poppins(fontSize: 18)),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => AvailableHallsPage(
+                          email: widget.email,
+                          customerName: customerName,
+                          customerContact: customerContact,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+
+                  // My Bookings
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(double.infinity, 60),
+                      backgroundColor: Colors.deepPurple,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 5,
+                      shadowColor: Colors.deepPurpleAccent,
+                    ),
+                    icon: Icon(Icons.receipt_long),
+                    label: Text("My Bookings", style: GoogleFonts.poppins(fontSize: 18)),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => MyBookingsPage(email: widget.email),
+                        ),
+                      );
+                    },
+                  ),
+                  SizedBox(height: 20),
+
+                  // Profile
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(double.infinity, 60),
+                      backgroundColor: Colors.teal,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 5,
+                      shadowColor: Colors.tealAccent,
+                    ),
+                    icon: Icon(Icons.settings),
+                    label: Text("My Profile", style: GoogleFonts.poppins(fontSize: 18)),
+                    onPressed: () => goToProfile(context),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          Positioned(
+            bottom: 24,
+            right: 24,
+            child: FloatingActionButton(
+              onPressed: () => confirmLogout(context),
+              child: Icon(Icons.logout),
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+              tooltip: "Logout",
+              elevation: 6,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class AuthScreen extends StatefulWidget {
+  final bool initialLogin;
+
+  AuthScreen({this.initialLogin = true});
+
+  @override
+  _AuthScreenState createState() => _AuthScreenState();
+}
+
+class _AuthScreenState extends State<AuthScreen> {
+  late bool isLogin;
+  final String baseUrl = "http://172.16.110.71:5000"; // Added baseUrl here
+
+  final nameController = TextEditingController();
+  final emailController = TextEditingController();
+  final phoneController = TextEditingController();
+  final passwordController = TextEditingController();
+  final profileImageController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    isLogin = widget.initialLogin;
+  }
+
+  void toggleMode() => setState(() => isLogin = !isLogin);
+
+  Future<void> submit() async {
+    String url = isLogin ? '$baseUrl/login' : '$baseUrl/register';
+
+    Map<String, dynamic> bodyData = isLogin
+        ? {
+            "email": emailController.text.trim(),
+            "password": passwordController.text,
+          }
+        : {
+            "name": nameController.text.trim(),
+            "email": emailController.text.trim(),
+            "phone": phoneController.text.trim(),
+            "password": passwordController.text,
+            "profile_image": profileImageController.text.trim(),
+          };
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(bodyData),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (isLogin) {
+          final String role = data['role']?.toString() ?? '';
+          final String email = data['email']?.toString() ?? '';
+          final String profileImage = data['profile_image']?.toString() ?? '';
+          final String name = data['name']?.toString() ?? '';
+
+          if (role.isEmpty) {
+            showError("❌ Invalid response from server.");
+            return;
+          }
+
+          if (role == 'admin') {
+            if (mounted) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => AdminDashboard()),
+              );
+            }
+          } else if (role == 'customer') {
+            if (mounted) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => CustomerDashboard(
+                    email: email,
+                    profileImage: profileImage,
+                    name: name,
+                  ),
+                ),
+              );
+            }
+          } else if (role == 'client') {
+            if (mounted) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ClientDashboard(
+                    clientEmail: email,
+                    name: name,
+                  ),
+                ),
+              );
+            }
+          } else {
+            showError("❌ Unknown role. Please contact support.");
+          }
+        } else {
+          showSuccess(data['message'] ?? 'Registration successful. Please log in.');
+        }
+      } else {
+        showError(data['message'] ?? data['error'] ?? '❌ Something went wrong');
+      }
+    } catch (e) {
+      showError("❌ Network error: ${e.toString()}");
+    }
+  }
+
+  void showError(String msg) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(msg), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  void showSuccess(String msg) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(msg), backgroundColor: Colors.green),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage("assets/elegant-white-blank-wedding-invitation-surrounded-delicate-pink-roses-artistic-rendering-creates-inviting-template-floral-357362509.webp"),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+            child: Container(color: Colors.black.withOpacity(0.3)),
+          ),
+          Center(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    isLogin ? "Login" : "Register",
+                    style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                  SizedBox(height: 20),
+                  if (!isLogin)
+                    TextField(
+                      controller: nameController,
+                      style: TextStyle(color: Colors.white),
+                      decoration: inputDecoration('Name'),
+                    ),
+                  SizedBox(height: 12),
+                  TextField(
+                    controller: emailController,
+                    style: TextStyle(color: Colors.white),
+                    decoration: inputDecoration('Email'),
+                  ),
+                  SizedBox(height: 12),
+                  if (!isLogin)
+                    TextField(
+                      controller: phoneController,
+                      style: TextStyle(color: Colors.white),
+                      decoration: inputDecoration('Phone'),
+                    ),
+                  SizedBox(height: 12),
+                  if (!isLogin)
+                    TextField(
+                      controller: profileImageController,
+                      style: TextStyle(color: Colors.white),
+                      decoration: inputDecoration('Profile Image (optional)'),
+                    ),
+                  SizedBox(height: 12),
+                  TextField(
+                    controller: passwordController,
+                    obscureText: true,
+                    style: TextStyle(color: Colors.white),
+                    decoration: inputDecoration('Password'),
+                  ),
+                  SizedBox(height: 24),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.pinkAccent,
+                      padding: EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                    ),
+                    onPressed: submit,
+                    child: Text(
+                      isLogin ? 'Login' : 'Register',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: toggleMode,
+                    child: Text(
+                      isLogin
+                          ? "Don't have an account? Register"
+                          : "Already have an account? Login",
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  InputDecoration inputDecoration(String label) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(color: Colors.white70),
+      enabledBorder: UnderlineInputBorder(
+        borderSide: BorderSide(color: Colors.white60),
+      ),
+      focusedBorder: UnderlineInputBorder(
+        borderSide: BorderSide(color: Colors.pinkAccent),
+      ),
+    );
+  }
+}
+// PART 3/3 – CalendarBookingPage, MyBookingsPage, AdminDashboard, UserLogsPage
+
+// ✅ CALENDAR BOOKING PAGE
+class CalendarBookingPage extends StatefulWidget {
+  final String email;
+  final int hallId;
+  final String hallName;
+  final String customerName;
+  final String customerContact;
+
+  CalendarBookingPage({
+    required this.email,
+    required this.hallId,
+    required this.hallName,
+    required this.customerName,
+    required this.customerContact,
+  });
+
+  @override
+  _CalendarBookingPageState createState() => _CalendarBookingPageState();
+}
+
+class _CalendarBookingPageState extends State<CalendarBookingPage> {
+  DateTime focusedDate = DateTime.now();
+  DateTime? selectedDate;
+  List<String> availableDates = [];
+
+  final String baseUrl = "http://172.16.110.71:5000"; // 🔗 Your backend
+
+  @override
+  void initState() {
+    super.initState();
+    fetchAvailability();
+  }
+
+  Future<void> fetchAvailability() async {
+    final res = await http.get(Uri.parse('$baseUrl/hall/${widget.hallId}/availability'));
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+      setState(() {
+        availableDates = List<String>.from(data['available_dates']); // Format: yyyy-MM-dd
+      });
+    } else {
+      print("❌ Failed to fetch availability");
+    }
+  }
+
+  bool isAvailable(DateTime day) {
+    String formatted = DateFormat('yyyy-MM-dd').format(day);
+    return availableDates.contains(formatted);
+  }
+
+  Future<void> bookSelectedDate() async {
+    if (selectedDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("❌ Please select a date first."),
+        backgroundColor: Colors.red,
+      ));
+      return;
+    }
+
+    String formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate!);
+
+    final Uri url = Uri.parse(
+      '$baseUrl/book?email=${Uri.encodeComponent(widget.email)}'
+      '&hall_id=${widget.hallId}'
+      '&booking_date=$formattedDate'
+      '&customer_name=${Uri.encodeComponent(widget.customerName)}'
+      '&customer_contact_number=${Uri.encodeComponent(widget.customerContact)}',
+    );
+
+    try {
+      final response = await http.get(url);
+      final data = jsonDecode(response.body);
+
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(data['message'] ?? '❌ Booking failed'),
+        backgroundColor: response.statusCode == 201 ? Colors.green : Colors.red,
+      ));
+
+      if (response.statusCode == 201) {
+        await fetchAvailability(); // 🔁 Refresh calendar
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("❌ Error: $e"),
+        backgroundColor: Colors.red,
+      ));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("📅 Book ${widget.hallName}"),
+        backgroundColor: Colors.pink[300],
+        centerTitle: true,
+      ),
+      body: Column(
+        children: [
+          TableCalendar(
+            firstDay: DateTime.now().subtract(Duration(days: 365)),
+            lastDay: DateTime.now().add(Duration(days: 36500)),
+            focusedDay: focusedDate,
+            selectedDayPredicate: (day) => isSameDay(selectedDate, day),
+            onDaySelected: (selected, focused) {
+              if (isAvailable(selected)) {
+                setState(() {
+                  selectedDate = selected;
+                  focusedDate = focused;
+                });
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text("❌ This date is already booked."),
+                  backgroundColor: Colors.red,
+                ));
+              }
+            },
+            calendarStyle: CalendarStyle(
+              isTodayHighlighted: true,
+              selectedDecoration: BoxDecoration(
+                color: Colors.indigo,
+                shape: BoxShape.circle,
+              ),
+              todayDecoration: BoxDecoration(
+                color: Colors.orange,
+                shape: BoxShape.circle,
+              ),
+              disabledTextStyle: TextStyle(color: Colors.grey),
+            ),
+            enabledDayPredicate: (day) => isAvailable(day),
+          ),
+          SizedBox(height: 20),
+          ElevatedButton.icon(
+            onPressed: bookSelectedDate,
+            icon: Icon(Icons.done),
+            label: Text("Confirm Booking"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+// ✅ MY BOOKINGS PAGE
+
+class MyBookingsPage extends StatefulWidget {
+  final String email;
+
+  const MyBookingsPage({Key? key, required this.email}) : super(key: key);
+
+  @override
+  _MyBookingsPageState createState() => _MyBookingsPageState();
+}
+
+class _MyBookingsPageState extends State<MyBookingsPage> {
+  final String baseUrl = "http://172.16.110.71:5000";
+
+  Future<List<dynamic>> fetchBookings() async {
+    try {
+      final url = '$baseUrl/my_bookings?email=${widget.email}';
+      print("📡 Fetching bookings from: $url");
+      final response = await http.get(Uri.parse(url));
+      print("✅ Status Code: ${response.statusCode}");
+      print("📦 Response Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        print("✅ Parsed bookings: ${data['bookings']}");
+        return data['bookings'] ?? [];
+      } else {
+        print("⚠️ Server returned error status.");
+        return [];
+      }
+    } catch (e) {
+      print("❌ Error fetching bookings: $e");
+      return [];
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("My Bookings", style: GoogleFonts.poppins()),
+        backgroundColor: Colors.deepPurple,
+        foregroundColor: Colors.white,
+      ),
+      body: FutureBuilder<List<dynamic>>(
+        future: fetchBookings(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator(color: Colors.deepPurple));
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}', style: GoogleFonts.poppins()));
+          } else {
+            final bookings = snapshot.data ?? [];
+
+            if (bookings.isEmpty) {
+              return Center(
+                child: Text("No bookings found.", style: GoogleFonts.poppins(fontSize: 18)),
+              );
+            }
+
+            return ListView.builder(
+              itemCount: bookings.length,
+              itemBuilder: (context, index) {
+                final booking = bookings[index];
+                return Card(
+                  margin: EdgeInsets.all(12),
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  child: ListTile(
+                    title: Text(booking['hall_name'] ?? "Unknown Hall", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+                    subtitle: Text("Date: ${booking['date']}\nStatus: ${booking['status']}", style: GoogleFonts.poppins()),
+                    leading: Icon(Icons.event, color: Colors.deepPurple),
+                  ),
+                );
+              },
+            );
+          }
+        },
+      ),
+    );
+  }
+}
+
+class AdminDashboard extends StatefulWidget {
+  @override
+  _AdminDashboardState createState() => _AdminDashboardState();
+}
+
+class _AdminDashboardState extends State<AdminDashboard> {
+  late Future<List<dynamic>> bookingsFuture;
+  List<dynamic> allBookings = [];
+  List<dynamic> filteredBookings = [];
+  final String baseUrl = "http://172.16.110.71:5000"; // Added baseUrl here
+
+  DateTime? fromDate;
+  DateTime? toDate;
+  String searchQuery = "";
+  String selectedStatus = "All";
+
+  final Color gunMetal = Color(0xFF2A3439);
+  final Color lightGrey = Color(0xFFF2F2F2);
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    bookingsFuture = fetchBookings();
+  }
+
+  Future<List<dynamic>> fetchBookings() async {
+    try {
+      final res = await http.get(Uri.parse('$baseUrl/admin/bookings'));
+      print("📥 Status: ${res.statusCode}");
+      print("📥 Response: ${res.body}");
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        setState(() {
+          allBookings = data;
+          filteredBookings = data;
+        });
+        return data;
+      } else {
+        throw Exception("Status Code: ${res.statusCode}");
+      }
+    } catch (e) {
+      print("❌ Error fetching bookings: $e");
+      return [];
+    }
+  }
+
+  void _applyFilters() {
+    List<dynamic> filtered = allBookings;
+
+    if (fromDate != null && toDate != null) {
+      filtered = filtered.where((b) {
+        final dateStr = b['booking_date'] ?? '';
+        try {
+          final bookingDate = DateTime.parse(dateStr);
+          return bookingDate.isAfter(fromDate!.subtract(Duration(days: 1))) &&
+              bookingDate.isBefore(toDate!.add(Duration(days: 1)));
+        } catch (_) {
+          return false;
+        }
+      }).toList();
+    }
+
+    if (selectedStatus != "All") {
+      filtered = filtered.where((b) {
+        final status = (b['status'] ?? '').toString().toLowerCase();
+        return status == selectedStatus.toLowerCase();
+      }).toList();
+    }
+
+    if (searchQuery.isNotEmpty) {
+      filtered = filtered.where((b) {
+        final hall = (b['hall_name'] ?? '').toString().toLowerCase();
+        return hall.contains(searchQuery.toLowerCase());
+      }).toList();
+    }
+
+    setState(() {
+      filteredBookings = filtered;
+    });
+  }
+
+  void _selectStartDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: fromDate ?? DateTime.now(),
+      firstDate: DateTime(2023),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) setState(() => fromDate = picked);
+  }
+
+  void _selectEndDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: toDate ?? DateTime.now(),
+      firstDate: DateTime(2023),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) setState(() => toDate = picked);
+  }
+
+  void _clearFilters() {
+    setState(() {
+      fromDate = null;
+      toDate = null;
+      selectedStatus = "All";
+      searchQuery = "";
+      filteredBookings = allBookings;
+    });
+  }
+
+  void confirmActionDialog(BuildContext context, int bookingId, String action) {
+    final String capitalized = action[0].toUpperCase() + action.substring(1);
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          backgroundColor: lightGrey,
+          title: Text("Confirm $capitalized", style: TextStyle(color: gunMetal)),
+          content: Text("Are you sure you want to $action this booking?", style: TextStyle(color: gunMetal)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text("Cancel", style: TextStyle(color: gunMetal)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: action == "approve" ? Colors.green : Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: Text("Yes, Approve"),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                updateBookingStatus(
+                  bookingId,
+                  action == "approve" ? "confirmation" : "canceled",
+                  context,
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> updateBookingStatus(int bookingId, String status, BuildContext context) async {
+    final res = await http.put(
+      Uri.parse('$baseUrl/admin/update_booking/$bookingId'),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"status": status}),
+    );
+
+    if (res.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("✅ Booking $status")));
+      bookingsFuture = fetchBookings();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("❌ Failed to update")));
+    }
+  }
+
+  void _showLogoutDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Text("Are you sure you want to logout?"),
+          actions: [
+            TextButton(
+              child: Text("Cancel"),
+              onPressed: () => Navigator.of(dialogContext).pop(),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: Text("Logout"),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                Future.delayed(Duration(milliseconds: 300), () {
+                  Navigator.of(context, rootNavigator: true)
+                      .pushNamedAndRemoveUntil('/login', (route) => false);
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _goToLogsPage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => UserLogsPage()),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: lightGrey,
+      body: Column(
+        children: [
+          Container(
+            color: gunMetal,
+            padding: EdgeInsets.all(16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.dashboard_customize, color: Colors.white),
+                    SizedBox(width: 8),
+                    Text("Admin Dashboard", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.settings, color: lightGrey),
+                      onPressed: _goToLogsPage,
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.logout, color: Colors.redAccent),
+                      onPressed: _showLogoutDialog,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 200,
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: '🔍 Search Hall Name',
+                        prefixIcon: Icon(Icons.search),
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
+                      ),
+                      onChanged: (value) {
+                        searchQuery = value;
+                        _applyFilters();
+                      },
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: _selectStartDate,
+                    child: Text(fromDate != null ? "Start: ${DateFormat('MMM d').format(fromDate!)}" : "Start Date"),
+                  ),
+                  SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: _selectEndDate,
+                    child: Text(toDate != null ? "End: ${DateFormat('MMM d').format(toDate!)}" : "End Date"),
+                  ),
+                  SizedBox(width: 8),
+                  DropdownButton<String>(
+                    value: selectedStatus,
+                    onChanged: (value) => setState(() => selectedStatus = value!),
+                    items: ["All", "pending", "confirmation", "canceled"]
+                        .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                        .toList(),
+                  ),
+                  SizedBox(width: 8),
+                  ElevatedButton.icon(
+                    onPressed: _applyFilters,
+                    icon: Icon(Icons.filter_alt),
+                    label: Text("Apply Filters"),
+                  ),
+                  SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: _clearFilters,
+                    child: Text("Clear"),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Expanded(
+            child: FutureBuilder<List<dynamic>>(
+              future: bookingsFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator(color: gunMetal));
+                } else if (snapshot.hasError) {
+                  return Center(child: Text("❌ Error loading bookings"));
+                } else if (!snapshot.hasData || filteredBookings.isEmpty) {
+                  return Center(child: Text("No bookings found"));
+                }
+
+                return ListView.builder(
+                  padding: EdgeInsets.all(10),
+                  itemCount: filteredBookings.length,
+                  itemBuilder: (context, index) {
+                    final b = filteredBookings[index];
+                    final hallName = b['hall_name'] ?? 'Unknown Hall';
+                    final bookingDate = b['booking_date'] ?? 'N/A';
+                    final customerEmail = b['customer_email'] ?? 'N/A';
+                    final bookingId = b['booking_id'];
+                    final status = (b['status'] ?? 'pending').toString().toLowerCase();
+
+                    return Card(
+                      color: gunMetal,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text("🏩 $hallName", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                            SizedBox(height: 4),
+                            Text("🗓 $bookingDate", style: TextStyle(color: Colors.white)),
+                            Text("👤 $customerEmail", style: TextStyle(color: Colors.white)),
+                            Text("📌 Status: ${status.toUpperCase()}", style: TextStyle(color: Colors.white)),
+                            if (status == 'pending')
+                              Row(
+                                children: [
+                                  TextButton(
+                                    style: TextButton.styleFrom(backgroundColor: Colors.green.shade100),
+                                    onPressed: () => confirmActionDialog(context, bookingId, "approve"),
+                                    child: Text("Approve", style: TextStyle(color: Colors.green.shade800)),
+                                  ),
+                                  SizedBox(width: 8),
+                                  TextButton(
+                                    style: TextButton.styleFrom(backgroundColor: Colors.red.shade100),
+                                    onPressed: () => confirmActionDialog(context, bookingId, "reject"),
+                                    child: Text("Reject", style: TextStyle(color: Colors.red.shade800)),
+                                  ),
+                                ],
+                              )
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+class UserLogsPage extends StatelessWidget {
+  final Color gunMetal = Color(0xFF2A3439);
+  final Color lightGrey = Color(0xFFF2F2F2);
+
+  Future<List<dynamic>> fetchLogs() async {
+    final response = await http.get(Uri.parse('http://172.16.110.71:5000/user_logs'));
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to load logs');
+    }
+  }
+
+  String formatTimestamp(String raw) {
+    try {
+      final dt = DateTime.parse(raw);
+      return DateFormat('dd MMM yyyy • hh:mm a').format(dt);
+    } catch (_) {
+      return raw;
+    }
+  }
+
+  IconData getIconForAction(String action) {
+    action = action.toLowerCase();
+    if (action.contains('login')) return Icons.login;
+    if (action.contains('register')) return Icons.app_registration;
+    if (action.contains('booking')) return Icons.event;
+    return Icons.info_outline;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: lightGrey,
+      appBar: AppBar(
+        title: Text('📜 User Activity Logs'),
+        backgroundColor: Colors.white,
+      ),
+      body: FutureBuilder<List<dynamic>>(
+        future: fetchLogs(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator(color: gunMetal));
+          } else if (snapshot.hasError) {
+            return Center(child: Text('❌ Error: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return Center(child: Text('No logs found'));
+          }
+
+          final logs = snapshot.data!;
+          return ListView.builder(
+            padding: EdgeInsets.all(12),
+            itemCount: logs.length,
+            itemBuilder: (context, index) {
+              final log = logs[index];
+              final icon = getIconForAction(log['action']);
+              final role = log['role']?.toString().capitalize() ?? 'User';
+              final email = log['user_email'] ?? 'Unknown';
+              final timestamp = formatTimestamp(log['timestamp']);
+              final action = log['action'] ?? 'Action';
+              final detail = log['details'] ?? '';
+
+              return Card(
+                margin: EdgeInsets.symmetric(vertical: 6),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                elevation: 2,
+                color: Colors.white,
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: gunMetal,
+                    child: Icon(icon, color: Colors.white),
+                  ),
+                  title: Text('$action ($role)', style: TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 4),
+                      Text('📧 $email', style: TextStyle(color: Colors.black87)),
+                      Text('🕒 $timestamp', style: TextStyle(color: Colors.grey[700])),
+                      if (detail.isNotEmpty) Padding(
+                        padding: const EdgeInsets.only(top: 4.0),
+                        child: Text('📝 $detail', style: TextStyle(color: Colors.black54)),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+extension StringCasingExtension on String {
+  String capitalize() =>
+      this.length > 0 ? '${this[0].toUpperCase()}${this.substring(1).toLowerCase()}' : '';
+}
+
+class ClientDashboard extends StatefulWidget {
+  final String clientEmail;
+  final String name;
+
+  ClientDashboard({
+    required this.clientEmail,
+    required this.name,
+  });
+
+  @override
+  _ClientDashboardState createState() => _ClientDashboardState();
+}
+
+class _ClientDashboardState extends State<ClientDashboard> {
+  final String baseUrl = "http://172.16.110.71:5000";
+  List<dynamic> clientHalls = [];
+  List<dynamic> clientBookings = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchClientData();
+  }
+
+  Future<void> fetchClientData() async {
+    setState(() => isLoading = true);
+    await Future.wait([
+      fetchClientHalls(),
+      fetchClientBookings(),
+    ]);
+    setState(() => isLoading = false);
+  }
+
+  Future<void> fetchClientHalls() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/client/halls/${widget.clientEmail}'),
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        clientHalls = json.decode(response.body)['client_halls'];
+      });
+    } else {
+      print("❌ Failed to load halls.");
+    }
+  }
+
+  Future<void> fetchClientBookings() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/client/bookings/${widget.clientEmail}'),
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        clientBookings = json.decode(response.body)['bookings'];
+      });
+    } else {
+      print("❌ Failed to load bookings.");
+    }
+  }
+
+  String formatDate(String dateStr) {
+    try {
+      final dt = DateTime.parse(dateStr);
+      return DateFormat('dd MMM yyyy').format(dt);
+    } catch (e) {
+      return dateStr;
+    }
+  }
+
+  void showConfirmationDialog(int bookingId, String status, String hallName, String bookingDate) {
+    final isApproval = status == 'confirmation';
+    final warningText = isApproval
+        ? "Approving this booking will automatically reject all other bookings for the same hall and date."
+        : "Are you sure you want to cancel this booking?";
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(isApproval ? "Approve Booking?" : "Cancel Booking?"),
+        content: Text(warningText),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              updateBookingStatus(bookingId, status);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isApproval ? Colors.green : Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(isApproval ? "Approve" : "Cancel"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> updateBookingStatus(int bookingId, String status) async {
+    final url = Uri.parse('$baseUrl/update_booking/$bookingId');
+
+    final response = await http.put(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "status": status,
+        "email": widget.clientEmail,
+        "role": "client",
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      // Find all bookings for the same hall and date
+      final approvedBooking = clientBookings.firstWhere(
+        (booking) => booking['booking_id'] == bookingId,
+        orElse: () => null,
+      );
+
+      if (approvedBooking != null && status == 'confirmation') {
+        final hallName = approvedBooking['hall_name'];
+        final bookingDate = approvedBooking['booking_date'];
+
+        // Update local state to reflect rejected bookings
+        setState(() {
+          clientBookings = clientBookings.map((booking) {
+            if (booking['hall_name'] == hallName && 
+                booking['booking_date'] == bookingDate && 
+                booking['booking_id'] != bookingId &&
+                (booking['status'] == 'pending' || booking['status'] == 'confirmation')) {
+              return {...booking, 'status': 'rejected'};
+            }
+            return booking;
+          }).toList();
+        });
+      }
+
+      // Update the status of the current booking
+      setState(() {
+        clientBookings = clientBookings.map((booking) {
+          if (booking['booking_id'] == bookingId) {
+            return {...booking, 'status': status};
+          }
+          return booking;
+        }).toList();
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("✅ Booking ${status == 'confirmation' ? 'approved' : 'canceled'} successfully.")),
+      );
+    } else {
+      print("❌ Error Response: ${response.body}");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("❌ Failed to update booking.")),
+      );
+    }
+  }
+
+  Color getStatusColor(String status) {
+    switch (status) {
+      case 'confirmation':
+        return Colors.green;
+      case 'canceled':
+      case 'rejected':
+        return Colors.red;
+      case 'pending':
+      default:
+        return Colors.orange;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Welcome, ${widget.name}"),
+        backgroundColor: Colors.pink[300],
+        actions: [
+          IconButton(
+            icon: Icon(Icons.refresh),
+            onPressed: fetchClientData,
+          )
+        ],
+      ),
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: fetchClientData,
+              child: SingleChildScrollView(
+                physics: AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("🏠 Your Halls",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.pink[900],
+                        )),
+                    SizedBox(height: 8),
+                    ...clientHalls.map((hall) => Card(
+                          child: ListTile(
+                            title: Text(hall['hall_name']),
+                            subtitle: Text("📍 ${hall['location']}"),
+                          ),
+                        )),
+                    SizedBox(height: 20),
+                    Text("📋 Booking Requests",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.pink[900],
+                        )),
+                    SizedBox(height: 8),
+                    ...clientBookings.map((booking) => Card(
+                          elevation: 3,
+                          margin: EdgeInsets.symmetric(vertical: 8),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text("🏠 Hall: ${booking['hall_name']}",
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16)),
+                                SizedBox(height: 4),
+                                Text("📅 Date: ${formatDate(booking['booking_date'])}"),
+                                Text("👤 Name: ${booking['customer_name']}"),
+                                Text("📧 Email: ${booking['customer_email']}"),
+                                Text("📞 Contact: ${booking['customer_contact_number']}"),
+                                Text(
+                                  "📌 Status: ${booking['status'] ?? 'pending'}",
+                                  style: TextStyle(
+                                    color: getStatusColor(booking['status']),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(height: 10),
+                                if (booking['status'] == 'pending')
+                                  Row(
+                                    children: [
+                                      ElevatedButton.icon(
+                                        onPressed: () => showConfirmationDialog(
+                                            booking['booking_id'],
+                                            'confirmation',
+                                            booking['hall_name'],
+                                            booking['booking_date']),
+                                        icon: Icon(Icons.check),
+                                        label: Text("Approve"),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.green,
+                                        ),
+                                      ),
+                                      SizedBox(width: 12),
+                                      ElevatedButton.icon(
+                                        onPressed: () => showConfirmationDialog(
+                                            booking['booking_id'],
+                                            'canceled',
+                                            booking['hall_name'],
+                                            booking['booking_date']),
+                                        icon: Icon(Icons.close),
+                                        label: Text("Cancel"),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                              ],
+                            ),
+                          ),
+                        )),
+                  ],
+                ),
+              ),
+            ),
+    );
+  }
+}
+
+
+
+
+
+
+
+
+
+----------------------------backend-------------------------------
+
+#from flask import Flask, request, jsonify
+#from flask_sqlalchemy import SQLAlchemy
+#from flask_cors import CORS
+
+#app = Flask(__name__)
+#CORS(app)
+
+# SQL Server Connection String
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'mssql+pyodbc://HO-MIS-TEMP/marriage_halls_db?driver=SQL+Server'
+#app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+#db = SQLAlchemy(app)
+
+
+#from flask import Flask
+#app = Flask(__name__)
+#@app.route('/')
+#def home():
+#    return 'Flask is working!'
+
+#if __name__ == '__main__':
+#    app.run(debug=True)
+
+#from flask import Flask, request, jsonify
+#from flask_mysqldb import MySQL
+#from flask_cors import CORS
+
+#app = Flask(__name__)
+#CORS(app)  # This allows your frontend (Flutter) to talk to backend
+
+# ---------------- MySQL Configuration ----------------
+#app.config['MYSQL_HOST'] = 'localhost'
+#app.config['MYSQL_USER'] = 'root'
+#app.config['MYSQL_PASSWORD'] = ''  # Add your MySQL password here
+#app.config['MYSQL_DB'] = 'marriage_halls_db'  # Replace with your DB name
+
+#mysql = MySQL(app)
+
+# ---------------- Home Route ----------------
+#@app.route('/')
+#def home():
+ #   return "Marriage Hall Booking System Backend Running!"
+
+# ---------------- Register Customer ----------------
+#@app.route('/register', methods=['POST'])
+#def register():
+   # data = request.get_json()
+   # name = data.get('name')
+   # email = data.get('email')
+   # phone = data.get('phone')
+   # password = data.get('password')  # You should hash this in real-world
+
+    #cursor = mysql.connection.cursor()
+    # Check if already exists
+    #cursor.execute("SELECT * FROM customers WHERE email = %s", (email,))
+    #existing = cursor.fetchone()
+    #if existing:
+    #    return jsonify({'status': 'error', 'message': 'Email already registered'}), 400
+
+    # Insert new user
+    #cursor.execute("INSERT INTO customers (name, email, phone, password) VALUES (%s, %s, %s, %s)",
+    #              (name, email, phone, password))
+   # mysql.connection.commit()
+  #  cursor.close()
+
+ #   return jsonify({'status': 'success', 'message': 'Registered successfully'})
+
+# ---------------- Login Customer ----------------
+#@app.route('/login', methods=['POST'])
+#def login():
+#data = request.get_json()
+   #email = data.get('email')
+  #pasword = data.get('password')
+
+    #ursor = mysql.connection.cursor()
+   #cursor.execute("SELECT * FROM customers WHERE email = %s AND password = %s", (email, password))
+   #user = cursor.fetchone()
+    #ursor.close()
+
+   #if user:
+   #    return jsonify({'status': 'success', 'message': 'Login successful'})
+   #else:
+     #      return jsonify({'status': 'error', 'message': 'Invalid credentials'}), 401
+
+# ---------------- Run Server ----------------
+#f __name__ == '__main__':
+#   app.run(debug=True)
+# ----------------- Customer Table -----------------
+# hall_booking_backend.py
+# hall_booking_backend.py
+
+# === Standard Library Imports ===
+from flask import Flask, request, jsonify, send_from_directory
+from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
+from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime, timedelta
+from twilio.rest import Client
+import os
+import random
+from datetime import datetime, date
+
+# ------------------- Flask App Setup -------------------
+app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
+
+# ------------------- Configuration -------------------
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mssql+pyodbc://localhost/MHDB?driver=ODBC+Driver+17+for+SQL+Server'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['UPLOAD_FOLDER'] = 'uploads'
+
+# ------------------- Initialize DB -------------------
+db = SQLAlchemy(app)
+# === Models ===
+class Customer(db.Model):
+    __tablename__ = 'customers'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(255))
+    email = db.Column(db.String(255), unique=True)
+    phone = db.Column(db.String(15))
+    password = db.Column(db.String(255))
+    role = db.Column(db.String(50), default='customer')
+    profile_image = db.Column(db.String(255))  # ✅ Add this line
+
+class MarriageHall(db.Model):
+    __tablename__ = 'marriage_halls'
+
+    hall_id = db.Column(db.Integer, primary_key=True)
+    hall_name = db.Column(db.String(100))
+    location = db.Column(db.String(100))
+    capacity = db.Column(db.Integer)
+    rent = db.Column(db.Integer)
+    contact_person = db.Column(db.String(100))
+    phone_number = db.Column(db.String(20))
+    client_email = db.Column(db.String(100))    # ✅ Corrected from 'email'
+
+
+class Booking(db.Model):
+    __tablename__ = 'bookings'
+    hall_booking_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    hall_id = db.Column(db.Integer, db.ForeignKey('marriage_halls.hall_id'))
+    customer_name = db.Column(db.String(255))
+    customer_contact_number = db.Column(db.String(15))
+    booking_date = db.Column(db.Date)
+    customer_email = db.Column(db.String(255))
+    status = db.Column(db.String(20), default='pending')
+
+class UserLog(db.Model):
+    __tablename__ = 'user_logs'
+
+    log_id = db.Column(db.Integer, primary_key=True)
+    user_email = db.Column(db.String(255))
+    role = db.Column(db.String(20))
+    action = db.Column(db.String(255))
+    details = db.Column(db.Text)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+# === Helper Function ===
+def log_action(email, role, action, details=None):
+    try:
+        log = UserLog(
+            user_email=email,
+            role=role,
+            action=action,
+            details=details
+        )
+        db.session.add(log)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"Logging failed: {e}")
+
+
+# === Routes ===
+@app.route('/')
+def home():
+    return jsonify({"message": "Hall Booking API Running"}), 200
+
+from sqlalchemy import text
+
+@app.route('/debug_db', methods=['GET'])
+def debug_db():
+    try:
+        result = db.session.execute(text("SELECT DB_NAME() as dbname"))
+        dbname = result.fetchone()[0]
+
+        tables_result = db.session.execute(text("""
+            SELECT TABLE_NAME 
+            FROM INFORMATION_SCHEMA.TABLES 
+            WHERE TABLE_TYPE = 'BASE TABLE'
+        """))
+
+        tables = [row[0] for row in tables_result]
+
+        return jsonify({
+            "connected_database": dbname,
+            "tables": tables
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+
+@app.route('/register', methods=['POST'])  # <-- Yeh fix tha
+def register():
+    data = request.get_json()
+
+    name = data.get('name')
+    email = data.get('email')
+    phone = data.get('phone')
+    password = data.get('password')
+    profile_image = data.get('profile_image', '')  # ✅ safely default to empty string
+
+    if not name or not email or not password or not phone:
+        return jsonify({"error": "Missing required fields"}), 400
+
+    existing_user = Customer.query.filter_by(email=email).first()
+    if existing_user:
+        return jsonify({"error": "User already exists"}), 409
+
+    new_user = Customer(
+        name=name,
+        email=email,
+        phone=phone,
+        password=password,
+        profile_image=profile_image,
+        role='customer'
+    )
+
+    db.session.add(new_user)
+    db.session.commit()
+
+    log_action(email, 'customer', 'Registered', 'New customer registered')
+
+    return jsonify({"message": "User registered successfully."}), 201
+
+
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    try:
+        data = request.get_json()
+
+        email = data.get('email', '').strip().lower()
+        password = data.get('password', '').strip()
+
+        # Query for matching customer (including client)
+        user = Customer.query.filter(
+            db.func.lower(Customer.email) == email,
+            Customer.password == password
+        ).first()
+
+        if user:
+            # ✅ Log the login action
+            log_action(email, user.role, "Login", "User successfully logged in")
+
+            # ✅ Return user info with role (admin/customer/client)
+            return jsonify({
+                "message": "Login successful",
+                "role": user.role,
+                "email": user.email,
+                "name": user.name,
+                "profile_image": user.profile_image or ''
+            }), 200
+
+        return jsonify({"error": "Invalid credentials"}), 401
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+
+
+
+
+
+
+@app.route('/upload_profile_image', methods=['POST'])
+def upload_profile_image():
+    if 'image' not in request.files or 'email' not in request.form:
+        return jsonify({"error": "Image or email missing"}), 400
+
+    file = request.files['image']
+    email = request.form['email'].strip().lower()
+
+    if file.filename == '':
+        return jsonify({"error": "No file selected"}), 400
+
+    filename = secure_filename(file.filename)
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    file.save(filepath)
+
+    user = Customer.query.filter_by(email=email).first()
+    if user:
+        user.profile_image = f"/uploads/{filename}"
+        db.session.commit()
+        return jsonify({"status": "success", "profile_image": user.profile_image})
+
+    return jsonify({"error": "User not found"}), 404
+
+@app.route('/admin/logs', methods=['GET'])
+def get_logs():
+    logs = UserLog.query.order_by(UserLog.timestamp.desc()).all()
+    result = []
+    for log in logs:
+        result.append({
+            "email": log.user_email,
+            "role": log.role,
+            "action": log.action,
+            "details": log.details,
+            "timestamp": log.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+        })
+    return jsonify(result)
+
+
+@app.route('/remove_profile_image', methods=['POST'])
+def remove_profile_image():
+    email = request.form.get('email')
+    if not email:
+        return jsonify({"error": "Email missing"}), 400
+
+    user = Customer.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    if user.profile_image:
+        image_path = user.profile_image.replace("/uploads/", "")
+        full_path = os.path.join(app.config['UPLOAD_FOLDER'], image_path)
+
+        # Delete image file if exists
+        if os.path.exists(full_path):
+            os.remove(full_path)
+
+        # Remove from DB
+        user.profile_image = None
+        db.session.commit()
+
+    return jsonify({"status": "success", "message": "Profile image removed"})
+
+
+@app.route('/uploads/<filename>')
+def serve_uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+@app.route('/halls', methods=['GET'])
+def get_halls():
+    halls = MarriageHall.query.all()
+    log_action(request.args.get('email', 'guest'), 'customer', 'Viewed halls')
+    return jsonify([{
+        "hall_id": h.hall_id,
+        "name": h.hall_name,   # ✅ FIXED
+        "location": h.location,
+        "capacity": h.capacity,
+        "rent": str(h.rent),
+        "contact_person": h.contact_person,
+        "phone_number": h.phone_number,
+        "email": h.client_email  # ✅ FIXED
+    } for h in halls])
+
+
+# ✅ Route 1: Get Available Dates
+@app.route('/hall/<int:hall_id>/availability')
+def get_availability(hall_id):
+    try:
+        records = db.session.execute(
+            text("SELECT available_date FROM hall_availability WHERE hall_id = :hall_id AND is_booked = 0"),
+            {"hall_id": hall_id}
+        ).fetchall()
+
+        available_dates = [row.available_date.strftime('%Y-%m-%d') for row in records]
+        return jsonify({"available_dates": available_dates})
+
+    except Exception as e:
+        return jsonify({"error": f"❌ Failed to fetch availability: {str(e)}"}), 500
+
+
+@app.route('/hall/<int:hall_id>/calendar_availability', methods=['GET'])
+def calendar_availability(hall_id):
+    try:
+        today = date.today()
+        results = db.session.execute(
+            text("SELECT available_date FROM hall_availability WHERE hall_id = :hall_id AND is_booked = 0 AND available_date >= :today ORDER BY available_date"),
+            {"hall_id": hall_id, "today": today}
+        ).fetchall()
+
+        available_dates = [row[0].strftime('%Y-%m-%d') for row in results]
+
+        return jsonify({
+            "hall_id": hall_id,
+            "available_calendar_dates": available_dates
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ✅ Route 2: All Halls Availability
+@app.route('/all_halls/availability')
+def get_all_hall_availability():
+    try:
+        records = db.session.execute(
+            text("SELECT hall_id, available_date FROM hall_availability WHERE is_booked = 0")
+        ).fetchall()
+
+        result = {}
+        for row in records:
+            date_str = row.available_date.strftime('%Y-%m-%d')
+            result.setdefault(row.hall_id, []).append(date_str)
+
+        return jsonify(result)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ✅ Route 3: Book a Hall (GET)
+@app.route('/book', methods=['GET'])  # Forced GET booking
+def book():
+    email = request.args.get('email')
+    hall_id = request.args.get('hall_id')
+    booking_date = request.args.get('booking_date')  # Format: YYYY-MM-DD
+    customer_name = request.args.get('customer_name')
+    customer_contact_number = request.args.get('customer_contact_number')
+
+    if not all([email, hall_id, booking_date, customer_name, customer_contact_number]):
+        return jsonify({"error": "❌ Missing fields"}), 400
+
+    try:
+        booking_date_obj = datetime.strptime(booking_date, '%Y-%m-%d').date()
+        hall_id_int = int(hall_id)
+        
+        print(f"📅 Booking attempt => Hall: {hall_id_int}, Date: {booking_date_obj}")
+
+        # Check if booking already exists by this customer on same hall and date
+        duplicate = db.session.execute(
+            text("""
+                SELECT 1 FROM bookings
+                WHERE customer_email = :email AND hall_id = :hall_id AND booking_date = :booking_date
+            """),
+            {"email": email, "hall_id": hall_id_int, "booking_date": booking_date_obj}
+        ).fetchone()
+
+        if duplicate:
+            return jsonify({"error": "❌ Booking already requested for this date by this customer."}), 409
+
+        # Check availability
+        record = db.session.execute(
+            text("""
+                SELECT * FROM hall_availability
+                WHERE hall_id = :hall_id AND available_date = :booking_date AND is_booked = 0
+            """),
+            {"hall_id": hall_id_int, "booking_date": booking_date_obj}
+        ).fetchone()
+
+        if not record:
+            return jsonify({"error": "❌ Date not found for this hall or already booked"}), 409
+
+        # Insert booking
+        new_booking = Booking(
+            customer_email=email,
+            hall_id=hall_id_int,
+            booking_date=booking_date_obj,
+            status="pending",
+            customer_name=customer_name,
+            customer_contact_number=customer_contact_number
+        )
+        db.session.add(new_booking)
+
+        db.session.commit()
+
+        # Log action
+        log_action(email, 'customer', "Booking Request", f"Hall ID: {hall_id}, Date: {booking_date}")
+
+        return jsonify({"message": "✅ Booking requested successfully."}), 201
+
+    except Exception as e:
+        return jsonify({"error": f"❌ Server error: {str(e)}"}), 500
+
+
+
+@app.route('/my_bookings', methods=['GET'])
+def my_bookings():
+    email = request.args.get('email')
+    if not email:
+        return jsonify({"error": "Email is required"}), 400
+
+    try:
+        bookings = db.session.query(Booking, MarriageHall).join(
+            MarriageHall, Booking.hall_id == MarriageHall.hall_id
+        ).filter(
+            Booking.customer_email == email
+        ).order_by(Booking.booking_date.desc()).all()
+
+        result = []
+        for booking, hall in bookings:
+            # Add more details to help customer understand status
+            status_message = {
+                'pending': 'Waiting for approval',
+                'approved_by_admin': 'Approved by admin',
+                'approved_by_client': 'Approved by hall owner',
+                'rejected': 'Not available (rejected)',
+                'canceled': 'Canceled by you'
+            }.get(booking.status, booking.status)
+
+            result.append({
+                "booking_id": booking.hall_booking_id,
+                "hall_name": hall.hall_name,
+                "booking_date": booking.booking_date.strftime('%Y-%m-%d'),
+                "status": booking.status,
+                "status_message": status_message,
+                "can_cancel": booking.status in ['pending', 'approved_by_admin']
+            })
+
+        return jsonify({"bookings": result}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/approve_booking', methods=['GET'])
+def approve_booking():
+    booking_id = request.args.get('booking_id')
+    new_status = request.args.get('status')  # 'approved_by_admin' or 'approved_by_client'
+    approver_email = request.args.get('email')  # Email of admin/client approving
+
+    # Fetch the target booking with hall details
+    booking = db.session.query(Booking, MarriageHall).join(
+        MarriageHall, Booking.hall_id == MarriageHall.hall_id
+    ).filter(Booking.hall_booking_id == booking_id).first()
+
+    if not booking:
+        return jsonify({'error': 'Booking not found'}), 404
+
+    booking_obj, hall = booking
+    hall_id = booking_obj.hall_id
+    booking_date = booking_obj.booking_date
+
+    # If approving, reject all other bookings for the same hall/date
+    if new_status in ['approved_by_admin', 'approved_by_client']:
+        try:
+            # Reject all other pending bookings
+            db.session.execute(
+                text("""
+                    UPDATE bookings
+                    SET status = 'rejected'
+                    WHERE hall_id = :hall_id 
+                    AND booking_date = :booking_date 
+                    AND hall_booking_id != :id
+                    AND status = 'pending'
+                """),
+                {'hall_id': hall_id, 'booking_date': booking_date, 'id': booking_id}
+            )
+
+            # Mark the hall as booked on that date
+            db.session.execute(
+                text("""
+                    UPDATE hall_availability
+                    SET is_booked = 1
+                    WHERE hall_id = :hall_id AND available_date = :booking_date
+                """),
+                {'hall_id': hall_id, 'booking_date': booking_date}
+            )
+
+            # Update the approved booking
+            booking_obj.status = new_status
+            db.session.commit()
+
+            # Log all actions
+            log_action(approver_email, 'admin' if 'admin' in new_status else 'client', 
+                      f"Approved booking {booking_id}", 
+                      f"Hall: {hall.hall_name}, Date: {booking_date}")
+            
+            # Log auto-rejections
+            rejected_bookings = Booking.query.filter(
+                Booking.hall_id == hall_id,
+                Booking.booking_date == booking_date,
+                Booking.hall_booking_id != booking_id,
+                Booking.status == 'rejected'
+            ).all()
+            
+            for rb in rejected_bookings:
+                log_action(rb.customer_email, 'system', "Booking auto-rejected", 
+                          f"Due to another booking being approved for {hall.hall_name} on {booking_date}")
+
+            return jsonify({
+                'message': 'Booking approved successfully',
+                'rejected_count': len(rejected_bookings)
+            })
+
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'error': str(e)}), 500
+
+
+
+
+@app.route('/admin/stats')
+def admin_stats():
+    log_action('admin@admin.com', 'admin', 'Viewed stats')
+    return jsonify({
+        "total_halls": MarriageHall.query.count(),
+        "total_customers": Customer.query.count(),
+        "total_bookings": Booking.query.count(),
+        "upcoming_bookings": Booking.query.filter(Booking.booking_date >= datetime.today()).count()
+    })
+
+@app.route('/admin/bookings')
+def all_bookings():
+    bookings = db.session.query(Booking, MarriageHall).join(
+        MarriageHall, Booking.hall_id == MarriageHall.hall_id, isouter=True
+    ).order_by(Booking.booking_date.desc()).all()
+
+    return jsonify([
+        {
+            "booking_id": b.hall_booking_id,  # or b.booking_id if your model says so
+            "hall_id": b.hall_id,
+            "hall_name": h.hall_name if h else "Unknown Hall",  # ✅
+            "booking_date": b.booking_date.strftime('%Y-%m-%d') if b.booking_date else None,
+            "status": b.status,
+            "customer_email": b.customer_email or "",
+        }
+        for b, h in bookings
+    ])
+
+
+@app.route('/admin/update_booking/<int:booking_id>', methods=['PUT'])
+def update_booking(booking_id):
+    data = request.get_json()
+    booking = Booking.query.get(booking_id)
+
+    if not booking:
+        return jsonify({"error": "Booking not found"}), 404
+
+    booking.status = data.get('status', booking.status)
+    db.session.commit()
+
+    # ✅ Log admin action
+    log_action('admin@admin.com', 'admin', f"Updated booking {booking_id}", f"Status changed to {booking.status}")
+
+    return jsonify({"message": f"Booking {booking_id} updated"})
+
+
+@app.route('/admin/logs')
+def admin_logs():
+    logs = UserLog.query.order_by(UserLog.timestamp.desc()).limit(100).all()
+    return jsonify([{
+        "email": l.email,
+        "role": l.role,
+        "action": l.action,
+        "timestamp": l.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+    } for l in logs])
+
+
+@app.route('/user_logs', methods=['GET'])
+def get_user_logs():
+    logs = UserLog.query.order_by(UserLog.timestamp.desc()).all()
+    result = []
+    for log in logs:
+        result.append({
+            "user_email": log.user_email,
+            "role": log.role,
+            "action": log.action,
+            "details": log.details,
+            "timestamp": log.timestamp.strftime("%Y-%m-%d %H:%M:%S")
+        })
+    return jsonify(result)
+
+@app.route('/get_user_name/<string:email>', methods=['GET'])
+def get_user_name(email):
+    user = Customer.query.filter_by(email=email).first()  # ✅ FIXED
+    if user:
+        return jsonify({"name": user.name})
+    else:
+        return jsonify({"error": "User not found"}), 404
+    
+
+#Flask Route to Fetch Halls Owned by Client
+
+@app.route('/client/halls/<email>', methods=['GET'])
+def get_client_halls(email):
+    try:
+        halls = MarriageHall.query.filter_by(client_email=email).all()
+        if not halls:
+            return jsonify({'message': 'No halls found for this client.'}), 404
+
+        result = []
+        for hall in halls:
+            result.append({
+                'hall_id': hall.hall_id,
+                'hall_name': hall.hall_name,
+                'location': hall.location,
+                'capacity': hall.capacity,
+                'rent': hall.rent,
+                'contact_person': hall.contact_person,
+                'phone_number': hall.phone_number,
+            })
+        return jsonify({'client_halls': result}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Route to Fetch Bookings for Client's Halls
+
+
+
+
+@app.route('/client/bookings/<client_email>', methods=['GET'])
+def get_client_bookings(client_email):
+    try:
+        # Step 1: Get all hall_ids owned by this client
+        halls = MarriageHall.query.filter_by(client_email=client_email).all()
+        hall_ids = [h.hall_id for h in halls]
+
+        if not hall_ids:
+            return jsonify({"bookings": []})  # No halls owned
+
+        # Step 2: Get bookings for those halls
+        bookings = db.session.query(Booking, MarriageHall).join(
+            MarriageHall, Booking.hall_id == MarriageHall.hall_id
+        ).filter(Booking.hall_id.in_(hall_ids)).order_by(Booking.booking_date.desc()).all()
+
+        # Step 3: Build response
+        result = []
+        for booking, hall in bookings:
+            result.append({
+                "booking_id": booking.hall_booking_id,
+                "booking_date": booking.booking_date.strftime("%Y-%m-%d"),
+                "customer_name": booking.customer_name,
+                "customer_email": booking.customer_email,
+                "customer_contact_number": booking.customer_contact_number,
+                "hall_name": hall.hall_name,
+                "status": booking.status
+            })
+
+        return jsonify({"bookings": result})
+
+    except Exception as e:
+        print("❌ ERROR:", e)
+        return jsonify({"error": str(e)}), 500
+    
+    
+    
+@app.route('/update_booking/<int:booking_id>', methods=['PUT'])
+def update_booking_universal(booking_id):
+    data = request.get_json()
+
+    status = data.get('status')
+    role = data.get('role')
+    email = data.get('email')
+
+    allowed_statuses = ['pending', 'confirmation', 'canceled', 'approved_by_admin', 'approved_by_client']
+    if status not in allowed_statuses:
+        return jsonify({"error": "Invalid status value"}), 400
+
+    booking = Booking.query.get(booking_id)
+    if not booking:
+        return jsonify({"error": "Booking not found"}), 404
+
+    booking.status = status
+    db.session.commit()
+    log_action(email, role, f"Booking {status}", f"Booking ID: {booking_id}")
+
+    if status == "approved_by_admin":
+        hall_name = booking.hall_name
+        booking_date = booking.booking_date
+
+        other_bookings = Booking.query.filter(
+            Booking.hall_name == hall_name,
+            Booking.booking_date == booking_date,
+            Booking.id != booking_id,
+            Booking.status == "pending"
+        ).all()
+
+        for b in other_bookings:
+            b.status = "rejected"
+
+        db.session.commit()  # ✅ Only once
+
+        for b in other_bookings:
+            log_action(email, role, "Booking rejected (auto)", f"Booking ID: {b.id}")
+
+    return jsonify({"message": f"Booking {status} successfully."}), 200
+
+
+
+
+
+
+
+
+
+@app.route('/hall/<int:hall_id>/booked_dates', methods=['GET'])
+def get_booked_dates(hall_id):
+    try:
+        results = db.session.execute(
+            text("""
+                SELECT available_date 
+                FROM hall_availability 
+                WHERE hall_id = :hall_id AND is_booked = 1
+                ORDER BY available_date
+            """),
+            {"hall_id": hall_id}
+        ).fetchall()
+
+        booked_dates = [row[0].strftime('%Y-%m-%d') for row in results]
+
+        return jsonify({
+            "hall_id": hall_id,
+            "booked_dates": booked_dates
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+
+
+
+
+# === Run ===
+if __name__ == '__main__':
+    if not os.path.exists('uploads'):
+        os.makedirs('uploads')
+    app.run(host='0.0.0.0', port=5000, debug=True)
+
+
+
+
+
+
+
+
+
+----------------------------sql------------------------------------------------
+
+
+-- ===========================
+-- 0. Drop Old Constraints and Tables
+-- ===========================
+IF OBJECT_ID('hall_availability', 'U') IS NOT NULL
+    ALTER TABLE hall_availability DROP CONSTRAINT IF EXISTS FK__hall_availability__hall_id;
+
+IF OBJECT_ID('bookings', 'U') IS NOT NULL
+    ALTER TABLE bookings DROP CONSTRAINT IF EXISTS FK__bookings__hall_id;
+
+DECLARE @fkSQL NVARCHAR(MAX) = '';
+
+SELECT @fkSQL += 'ALTER TABLE ' + QUOTENAME(OBJECT_SCHEMA_NAME(parent_object_id)) + '.' + QUOTENAME(OBJECT_NAME(parent_object_id)) + 
+                 ' DROP CONSTRAINT ' + QUOTENAME(name) + ';' + CHAR(13)
+FROM sys.foreign_keys
+WHERE referenced_object_id IN (
+    OBJECT_ID('bookings'),
+    OBJECT_ID('marriage_halls'),
+    OBJECT_ID('customers'),
+    OBJECT_ID('hall_availability'),
+    OBJECT_ID('user_logs')
+);
+
+EXEC sp_executesql @fkSQL;
+
+-- STEP 2: DROP ALL DEFAULT CONSTRAINTS
+DECLARE @dcSQL NVARCHAR(MAX) = '';
+
+SELECT @dcSQL += 'ALTER TABLE ' + QUOTENAME(OBJECT_SCHEMA_NAME(t.object_id)) + '.' + QUOTENAME(t.name) +
+                 ' DROP CONSTRAINT ' + QUOTENAME(dc.name) + ';' + CHAR(13)
+FROM sys.default_constraints dc
+JOIN sys.tables t ON dc.parent_object_id = t.object_id
+WHERE t.name IN ('bookings', 'marriage_halls', 'customers', 'hall_availability', 'user_logs');
+
+EXEC sp_executesql @dcSQL;
+
+-- STEP 3: NOW DROP ALL TABLES SAFELY
+DROP TABLE IF EXISTS hall_availability;
+DROP TABLE IF EXISTS bookings;
+DROP TABLE IF EXISTS marriage_halls;
+DROP TABLE IF EXISTS customers;
+DROP TABLE IF EXISTS user_logs;
+-- ===========================
+-- 1. Create Database if Not Exists
+-- ===========================
+IF DB_ID('MHDB') IS NULL
+    CREATE DATABASE MHDB;
+GO
+
+USE MHDB;
+GO
+
+-- ===========================
+-- 2. Customers Table
+-- ===========================
+CREATE TABLE customers (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    name VARCHAR(100),
+    email VARCHAR(100) UNIQUE,
+    phone VARCHAR(15),
+    password VARCHAR(255),
+    role VARCHAR(20) DEFAULT 'customer',
+    profile_image VARCHAR(255)
+);
+
+-- ===========================
+-- 3. Marriage Halls Table
+-- ===========================
+CREATE TABLE marriage_halls (
+    hall_id INT PRIMARY KEY IDENTITY(1,1),
+    hall_name VARCHAR(255),
+    location VARCHAR(255),
+    capacity INT,
+    rent INT,
+    contact_person VARCHAR(100),
+    phone_number VARCHAR(15),
+    client_email VARCHAR(100)
+);
+
+-- ===========================
+-- 4. Hall Availability Table
+-- ===========================
+CREATE TABLE hall_availability (
+    availability_id INT PRIMARY KEY IDENTITY(1,1),
+    hall_id INT,
+    available_date DATE NOT NULL,
+    is_booked BIT DEFAULT 0,
+    FOREIGN KEY (hall_id) REFERENCES marriage_halls(hall_id),
+    UNIQUE(hall_id, available_date)
+);
+
+-- ===========================
+-- 5. Bookings Table
+-- ===========================
+CREATE TABLE bookings (
+    hall_booking_id INT PRIMARY KEY IDENTITY(1,1),
+    hall_id INT,
+    customer_name NVARCHAR(255),
+    customer_contact_number NVARCHAR(20),
+    booking_date DATE,
+    status NVARCHAR(30) DEFAULT 'pending'
+        CHECK (status IN ('pending', 'confirmation', 'canceled', 'approved_by_admin', 'approved_by_client')),
+    customer_email VARCHAR(255),
+    FOREIGN KEY (hall_id) REFERENCES marriage_halls(hall_id)
+);
+
+-- ===========================
+-- 6. User Logs Table
+-- ===========================
+CREATE TABLE user_logs (
+    log_id INT PRIMARY KEY IDENTITY(1,1),
+    user_email VARCHAR(255),
+    role VARCHAR(20),
+    action VARCHAR(255),
+    details TEXT,
+    timestamp DATETIME DEFAULT GETDATE()
+);
+
+-- ===========================
+-- 7. Insert Admin
+-- ===========================
+DELETE FROM customers WHERE email = 'admin@admin.com';
+INSERT INTO customers (name, email, phone, password, role)
+VALUES ('Admin User', 'admin@admin.com', '03001234567', 'admin123', 'admin');
+
+-- ===========================
+-- 8. Insert Clients
+-- ===========================
+DELETE FROM customers WHERE role = 'client';
+INSERT INTO customers (name, email, password, phone, role)
+VALUES 
+('Bilal Client', 'bilal@client.com', '123', '03001234567', 'client'),
+('Ebad Client', 'ebad@client.com', '123', '03111234567', 'client'),
+('Arsalan Client', 'arsalan@client.com', '123', '03211234567', 'client');
+
+-- ===========================
+-- 9. Insert Customers
+-- ===========================
+DELETE FROM customers WHERE role = 'customer';
+INSERT INTO customers (name, email, phone, password, role)
+VALUES 
+('Mufrah Jawaid', 'mufrah@client.com', '03123456789', '1234', 'customer'),
+('Hashir', 'hashir@gmail.com', '03111234567', '1234', 'customer'),
+('Lucky', 'lucky@gmail.com', '03119876543', '1234', 'customer');
+
+-- ===========================
+-- 10. Insert Halls
+-- ===========================
+DELETE FROM marriage_halls;
+INSERT INTO marriage_halls (hall_name, location, capacity, rent, contact_person, phone_number, client_email)
+VALUES 
+('Galaxy Banquet', 'Karachi', 300, 250000, 'Ali Khan', '03111222333', 'bilal@client.com'),
+('Pearl Palace', 'Lahore', 400, 275000, 'Sara Ahmed', '03211234567', 'bilal@client.com'),
+('Royal Fort', 'Islamabad', 500, 300000, 'Ahmed Raza', '03012345678', 'ebad@client.com'),
+('Dream Garden', 'Karachi', 350, 260000, 'Fatima Noor', '03451234567', 'arsalan@client.com'),
+('Sunshine Villa', 'Rawalpindi', 450, 285000, 'Bilal Hussain', '03331234567', 'arsalan@client.com');
+
+-- ===========================
+-- 11. Insert 10 Years Availability (3650 days)
+-- ===========================
+DECLARE @startDate DATE = CAST(GETDATE() AS DATE);
+DECLARE @endDate DATE = DATEADD(DAY, 36499, @startDate);
+DECLARE @currentDate DATE = @startDate;
+
+WHILE @currentDate <= @endDate
+BEGIN
+    INSERT INTO hall_availability (hall_id, available_date, is_booked)
+    SELECT hall_id, @currentDate, 0
+    FROM marriage_halls
+    WHERE NOT EXISTS (
+        SELECT 1 FROM hall_availability ha
+        WHERE ha.hall_id = marriage_halls.hall_id
+        AND ha.available_date = @currentDate
+    );
+
+    SET @currentDate = DATEADD(DAY, 1, @currentDate);
+END
+
+-- ===========================
+-- 12. Sample Booking
+-- ===========================
+INSERT INTO bookings (hall_id, customer_name, customer_contact_number, booking_date, status, customer_email)
+VALUES (1, 'Mufrah Jawaid', '03123456789', '2025-07-25', 'confirmation', 'mufrah@client.com');
+
+-- ===========================
+-- 13. Sample Logs
+-- ===========================
+INSERT INTO user_logs (user_email, role, action, details)
+VALUES 
+('admin@admin.com', 'admin', 'Viewed Dashboard', 'Admin opened dashboard'),
+('mufrah@client.com', 'customer', 'Booked Hall', 'Hall ID 1 booked on 2025-07-25');
+
+-- ===========================
+-- 14. Test Queries
+-- ===========================
+SELECT * FROM hall_availability WHERE hall_id=1 AND is_booked=1 ORDER BY availability_id DESC;
+SELECT * FROM marriage_halls WHERE client_email = 'ebad@client.com';
+SELECT * FROM bookings WHERE hall_id = 3;
+
+use mhdb;
+select * from customers;
+
+SELECT * FROM hall_availability
+WHERE hall_id = 1 AND available_date = '2025-07-25';
+
+SELECT * FROM hall_availability
+WHERE hall_id = 1 :hall_id AND available_date = :booking_date AND is_booked = 0;
+
+UPDATE hall_availability
+SET is_booked = 0
+WHERE available_date BETWEEN '2025-01-01' AND '2125-12-31';
+
+SELECT booking_date, is_booked
+FROM hall_availability
+WHERE hall_id = 1
+ORDER BY booking_date;
+
+SELECT TOP 5 *
+FROM hall_availability;
+
+
+SELECT available_date, is_booked
+FROM hall_availability
+WHERE hall_id = 1 AND is_booked = 1;
+
+
+WITH DuplicateBookings AS (
+    SELECT *,
+           ROW_NUMBER() OVER (
+               PARTITION BY customer_email, hall_id, booking_date
+               ORDER BY hall_booking_id
+           ) AS rn
+    FROM bookings
+)
+DELETE FROM DuplicateBookings
+WHERE rn > 1;
+
+use mhdb;
+
+ALTER TABLE bookings
+ADD CONSTRAINT uq_customer_booking UNIQUE (customer_email, hall_id, booking_date);
+
+
