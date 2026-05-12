@@ -18,6 +18,8 @@ import 'session_storage.dart';
 import 'notification_service.dart';
 import 'messages_screen.dart';
 import 'message_model.dart';
+import 'photographer.dart';
+import 'jazzcash.dart';
 
 void main() {
   runApp(
@@ -93,8 +95,8 @@ class _MyAppState extends State<MyApp> {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [
-        Locale('en', ''), // English
-        Locale('ur', ''), // Urdu
+        Locale('en', ''),
+        Locale('ur', ''),
       ],
       home: StreamBuilder<List<Message>>(
         stream: NotificationService.messagesStream,
@@ -261,7 +263,6 @@ class ApiClient {
     );
   }
 
-  // Legacy cancel - replace with new policy-based
   Future<Map<String, dynamic>> cancelBooking(
       int bookingId, int customerId) async {
     return _sendForMap(() {
@@ -273,7 +274,6 @@ class ApiClient {
     });
   }
 
-  // New features
   Future<Map<String, dynamic>> requestCancel(int bookingId, int customerId, String reason) async {
     return _sendForMap(() {
       return http.post(
@@ -545,6 +545,11 @@ const hallImageCatalog = <String, List<String>>{
     'assets/images/halls/galaxy/hall2.jpg',
     'assets/images/halls/galaxy/hall3.jpg',
   ],
+  'galaxy banquet': [
+    'assets/images/halls/galaxy/hall1.jpg',
+    'assets/images/halls/galaxy/hall2.jpg',
+    'assets/images/halls/galaxy/hall3.jpg',
+  ],
   'dream garden': [
     'assets/images/halls/dream_garden/hall1.jpg',
     'assets/images/halls/dream_garden/hall2.jpg',
@@ -600,9 +605,7 @@ Widget buildHallImage(
       ),
     );
   }
-  // Flutter web's debug server may not serve declared assets consistently.
-  // For anything under `assets/...`, fetch it from Flask where we serve assets.
-  if (kIsWeb && path.startsWith('assets/')) {
+  if (path.startsWith('assets/')) {
     final relpath = path.substring('assets/'.length);
     final url = '$baseUrl/app_assets/$relpath';
     return Image.network(
@@ -625,11 +628,9 @@ Widget buildHallImage(
 double calculateAdjustedCost(double baseRent, int guestCount) {
   const baseCapacity = 30;
   const costPer30Guests = 20000.0;
-
   if (guestCount <= baseCapacity) {
     return baseRent;
   }
-
   final additionalGroups = (guestCount - baseCapacity) ~/ baseCapacity;
   return baseRent + (additionalGroups * costPer30Guests);
 }
@@ -726,9 +727,7 @@ class _BookingMessagesDialogState extends State<BookingMessagesDialog> {
   }
 
   void _scrollToBottom() {
-    if (!_scrollController.hasClients) {
-      return;
-    }
+    if (!_scrollController.hasClients) return;
     _scrollController.animateTo(
       _scrollController.position.maxScrollExtent,
       duration: const Duration(milliseconds: 220),
@@ -737,9 +736,7 @@ class _BookingMessagesDialogState extends State<BookingMessagesDialog> {
   }
 
   Future<void> _refreshMessages() async {
-    if (_refreshing || widget.loadMessages == null) {
-      return;
-    }
+    if (_refreshing || widget.loadMessages == null) return;
     _refreshing = true;
     try {
       final latestMessages = await widget.loadMessages!();
@@ -756,9 +753,7 @@ class _BookingMessagesDialogState extends State<BookingMessagesDialog> {
 
   Future<void> _send() async {
     final text = _controller.text.trim();
-    if (text.isEmpty) {
-      return;
-    }
+    if (text.isEmpty) return;
     setState(() => _sending = true);
     try {
       await widget.onSend(text);
@@ -771,9 +766,7 @@ class _BookingMessagesDialogState extends State<BookingMessagesDialog> {
       if (!mounted) return;
       showAppSnackBar(context, error.toString(), isError: true);
     } finally {
-      if (mounted) {
-        setState(() => _sending = false);
-      }
+      if (mounted) setState(() => _sending = false);
     }
   }
 
@@ -795,8 +788,7 @@ class _BookingMessagesDialogState extends State<BookingMessagesDialog> {
                   color: const Color(0xFFFFFFFF),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child:
-                    const Text('No messages yet. Start the conversation here.'),
+                child: const Text('No messages yet. Start the conversation here.'),
               )
             else
               ConstrainedBox(
@@ -885,20 +877,14 @@ class BookingMessagePreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (messages.isEmpty) {
-      return const Text(
-        'No messages yet.',
-        style: TextStyle(color: Colors.grey),
-      );
+      return const Text('No messages yet.', style: TextStyle(color: Colors.grey));
     }
-
     final previewMessages =
         messages.length <= 2 ? messages : messages.sublist(messages.length - 2);
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: previewMessages.map((message) {
-        final sender =
-            message['sender_name']?.toString() ??
+        final sender = message['sender_name']?.toString() ??
             (message['sender_role'] == 'admin' ? 'Admin' : 'Customer');
         return Padding(
           padding: const EdgeInsets.only(top: 6),
@@ -987,27 +973,22 @@ class LandingPage extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(28),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.18),
-                  ),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       AppLocalizations.of(context)!.availableHalls,
-                      style:
-                          Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                              ),
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       AppLocalizations.of(context)!.fullHallList,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.86),
-                      ),
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.86)),
                     ),
                     const SizedBox(height: 18),
                     FutureBuilder<List<dynamic>>(
@@ -1017,9 +998,7 @@ class LandingPage extends StatelessWidget {
                           return const Center(
                             child: Padding(
                               padding: EdgeInsets.symmetric(vertical: 24),
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                              ),
+                              child: CircularProgressIndicator(color: Colors.white),
                             ),
                           );
                         }
@@ -1032,29 +1011,25 @@ class LandingPage extends StatelessWidget {
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(20),
                             ),
-                            child: Text(
-                              AppLocalizations.of(context)!.noHallsAvailable,
-                            ),
+                            child: Text(AppLocalizations.of(context)!.noHallsAvailable),
                           );
                         }
                         return Column(
                           children: halls
-                              .map(
-                                (hall) => HallPreviewCard(
-                                  hall: Map<String, dynamic>.from(hall as Map),
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => HallDetailPage(
-                                          user: const {},
-                                          hall: Map<String, dynamic>.from(hall),
+                              .map((hall) => HallPreviewCard(
+                                    hall: Map<String, dynamic>.from(hall as Map),
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => HallDetailPage(
+                                            user: const {},
+                                            hall: Map<String, dynamic>.from(hall),
+                                          ),
                                         ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              )
+                                      );
+                                    },
+                                  ))
                               .toList(),
                         );
                       },
@@ -1072,7 +1047,6 @@ class LandingPage extends StatelessWidget {
 
 class AuthScreen extends StatefulWidget {
   final bool initialLogin;
-
   const AuthScreen({super.key, this.initialLogin = true});
 
   @override
@@ -1105,10 +1079,7 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-
+    if (!_formKey.currentState!.validate()) return;
     setState(() => _submitting = true);
     try {
       if (_isLogin) {
@@ -1119,8 +1090,7 @@ class _AuthScreenState extends State<AuthScreen> {
         final role = data['role']?.toString() ?? '';
         final user = Map<String, dynamic>.from(data['user'] as Map? ?? {});
         if (role.isEmpty || user.isEmpty) {
-          throw ApiException(
-              'Login succeeded but the server returned an incomplete user session.');
+          throw ApiException('Login succeeded but the server returned an incomplete user session.');
         }
         await saveSession(role, user);
         if (!mounted) return;
@@ -1146,9 +1116,7 @@ class _AuthScreenState extends State<AuthScreen> {
       if (!mounted) return;
       showAppSnackBar(context, error.toString(), isError: true);
     } finally {
-      if (mounted) {
-        setState(() => _submitting = false);
-      }
+      if (mounted) setState(() => _submitting = false);
     }
   }
 
@@ -1199,12 +1167,8 @@ class _AuthScreenState extends State<AuthScreen> {
                               Text(
                                 _isLogin
                                     ? AppLocalizations.of(context)!.welcomeBack
-                                    : AppLocalizations.of(context)!
-                                        .createAccount,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headlineSmall
-                                    ?.copyWith(
+                                    : AppLocalizations.of(context)!.createAccount,
+                                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                                       color: Colors.white,
                                       fontWeight: FontWeight.w700,
                                     ),
@@ -1212,13 +1176,9 @@ class _AuthScreenState extends State<AuthScreen> {
                               const SizedBox(height: 6),
                               Text(
                                 _isLogin
-                                    ? AppLocalizations.of(context)!
-                                        .loginSubtitle
-                                    : AppLocalizations.of(context)!
-                                        .registerSubtitle,
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.82),
-                                ),
+                                    ? AppLocalizations.of(context)!.loginSubtitle
+                                    : AppLocalizations.of(context)!.registerSubtitle,
+                                style: TextStyle(color: Colors.white.withValues(alpha: 0.82)),
                               ),
                             ],
                           ),
@@ -1228,8 +1188,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           TextFormField(
                             controller: _nameController,
                             decoration: InputDecoration(
-                                labelText:
-                                    AppLocalizations.of(context)!.fullName),
+                                labelText: AppLocalizations.of(context)!.fullName),
                             validator: (value) =>
                                 value == null || value.trim().isEmpty
                                     ? AppLocalizations.of(context)!.enterName
@@ -1242,10 +1201,10 @@ class _AuthScreenState extends State<AuthScreen> {
                           keyboardType: TextInputType.emailAddress,
                           decoration: InputDecoration(
                               labelText: AppLocalizations.of(context)!.email),
-                          validator: (value) => value == null ||
-                                  !value.contains('@')
-                              ? AppLocalizations.of(context)!.enterValidEmail
-                              : null,
+                          validator: (value) =>
+                              value == null || !value.contains('@')
+                                  ? AppLocalizations.of(context)!.enterValidEmail
+                                  : null,
                         ),
                         const SizedBox(height: 12),
                         if (!_isLogin) ...[
@@ -1263,36 +1222,20 @@ class _AuthScreenState extends State<AuthScreen> {
                           DropdownButtonFormField<String>(
                             initialValue: _favoriteCategory,
                             decoration: InputDecoration(
-                                labelText: AppLocalizations.of(context)!
-                                    .preferredHallType),
+                                labelText: AppLocalizations.of(context)!.preferredHallType),
                             items: [
-                              {
-                                'value': 'Any',
-                                'display': AppLocalizations.of(context)!.any
-                              },
-                              {
-                                'value': 'Luxury',
-                                'display': AppLocalizations.of(context)!.luxury
-                              },
-                              {
-                                'value': 'Outdoor',
-                                'display': AppLocalizations.of(context)!.outdoor
-                              },
-                              {
-                                'value': 'Indoor',
-                                'display': AppLocalizations.of(context)!.indoor
-                              },
-                              {
-                                'value': 'Budget',
-                                'display': AppLocalizations.of(context)!.budget
-                              }
+                              {'value': 'Any', 'display': AppLocalizations.of(context)!.any},
+                              {'value': 'Luxury', 'display': AppLocalizations.of(context)!.luxury},
+                              {'value': 'Outdoor', 'display': AppLocalizations.of(context)!.outdoor},
+                              {'value': 'Indoor', 'display': AppLocalizations.of(context)!.indoor},
+                              {'value': 'Budget', 'display': AppLocalizations.of(context)!.budget},
                             ]
                                 .map((item) => DropdownMenuItem<String>(
                                     value: item['value'] as String,
                                     child: Text(item['display'] as String)))
                                 .toList(),
-                            onChanged: (value) => setState(
-                                () => _favoriteCategory = value ?? 'Any'),
+                            onChanged: (value) =>
+                                setState(() => _favoriteCategory = value ?? 'Any'),
                           ),
                           const SizedBox(height: 12),
                         ],
@@ -1300,12 +1243,11 @@ class _AuthScreenState extends State<AuthScreen> {
                           controller: _passwordController,
                           obscureText: true,
                           decoration: InputDecoration(
-                              labelText:
-                                  AppLocalizations.of(context)!.password),
-                          validator: (value) => value == null ||
-                                  value.length < 6
-                              ? AppLocalizations.of(context)!.passwordMinLength
-                              : null,
+                              labelText: AppLocalizations.of(context)!.password),
+                          validator: (value) =>
+                              value == null || value.length < 6
+                                  ? AppLocalizations.of(context)!.passwordMinLength
+                                  : null,
                         ),
                         const SizedBox(height: 20),
                         FilledButton(
@@ -1314,8 +1256,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               ? AppLocalizations.of(context)!.pleaseWait
                               : _isLogin
                                   ? AppLocalizations.of(context)!.login
-                                  : AppLocalizations.of(context)!
-                                      .createAccount),
+                                  : AppLocalizations.of(context)!.createAccount),
                         ),
                         TextButton(
                           onPressed: _submitting
@@ -1323,10 +1264,8 @@ class _AuthScreenState extends State<AuthScreen> {
                               : () => setState(() => _isLogin = !_isLogin),
                           child: Text(
                             _isLogin
-                                ? AppLocalizations.of(context)!
-                                    .needAccountRegister
-                                : AppLocalizations.of(context)!
-                                    .alreadyRegisteredLogin,
+                                ? AppLocalizations.of(context)!.needAccountRegister
+                                : AppLocalizations.of(context)!.alreadyRegisteredLogin,
                           ),
                         ),
                       ],
@@ -1344,7 +1283,6 @@ class _AuthScreenState extends State<AuthScreen> {
 
 class CustomerDashboard extends StatefulWidget {
   final Map<String, dynamic> user;
-
   const CustomerDashboard({super.key, required this.user});
 
   @override
@@ -1387,9 +1325,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
   Future<void> _editProfile() async {
     final updated = await Navigator.push<Map<String, dynamic>>(
       context,
-      MaterialPageRoute(
-        builder: (_) => CustomerProfilePage(user: _user),
-      ),
+      MaterialPageRoute(builder: (_) => CustomerProfilePage(user: _user)),
     );
     if (updated != null && mounted) {
       setState(() {
@@ -1401,8 +1337,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
   }
 
   void _showLanguageDialog(BuildContext context) {
-    final languageProvider =
-        Provider.of<LanguageProvider>(context, listen: false);
+    final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1418,14 +1353,8 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
           child: const Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              ListTile(
-                title: Text('English'),
-                leading: Radio<String>(value: 'en'),
-              ),
-              ListTile(
-                title: Text('اردو'),
-                leading: Radio<String>(value: 'ur'),
-              ),
+              ListTile(title: Text('English'), leading: Radio<String>(value: 'en')),
+              ListTile(title: Text('اردو'), leading: Radio<String>(value: 'ur')),
             ],
           ),
         ),
@@ -1441,8 +1370,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    final firstName =
-        (_user['name']?.toString() ?? 'Customer').split(' ').first;
+    final firstName = (_user['name']?.toString() ?? 'Customer').split(' ').first;
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.customerDashboard),
@@ -1452,8 +1380,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
             icon: const Icon(Icons.language),
             tooltip: AppLocalizations.of(context)!.changeLanguage,
           ),
-          IconButton(
-              onPressed: _editProfile, icon: const Icon(Icons.person_outline)),
+          IconButton(onPressed: _editProfile, icon: const Icon(Icons.person_outline)),
           IconButton(onPressed: _logout, icon: const Icon(Icons.logout)),
         ],
       ),
@@ -1477,10 +1404,9 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                       (_user['profile_image']?.toString().isNotEmpty ?? false)
                           ? NetworkImage(_user['profile_image'].toString())
                           : null,
-                  child:
-                      (_user['profile_image']?.toString().isNotEmpty ?? false)
-                          ? null
-                          : const Icon(Icons.person, size: 34),
+                  child: (_user['profile_image']?.toString().isNotEmpty ?? false)
+                      ? null
+                      : const Icon(Icons.person, size: 34),
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -1508,25 +1434,19 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                 title: AppLocalizations.of(context)!.browseHalls,
                 subtitle: AppLocalizations.of(context)!.browseHallsSubtitle,
                 icon: Icons.storefront_outlined,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => HallCatalogPage(user: _user)),
-                  );
-                },
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => HallCatalogPage(user: _user)),
+                ),
               ),
               _ActionCard(
                 title: AppLocalizations.of(context)!.myBookings,
                 subtitle: AppLocalizations.of(context)!.myBookingsSubtitle,
                 icon: Icons.event_available_outlined,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => MyBookingsPage(user: _user)),
-                  );
-                },
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => MyBookingsPage(user: _user)),
+                ),
               ),
               _ActionCard(
                 title: AppLocalizations.of(context)!.updateProfile,
@@ -1540,20 +1460,14 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
           Row(
             children: [
               Expanded(
-                child: Text(
-                  AppLocalizations.of(context)!.allHalls,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
+                child: Text(AppLocalizations.of(context)!.allHalls,
+                    style: Theme.of(context).textTheme.titleLarge),
               ),
               TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => HallCatalogPage(user: _user),
-                    ),
-                  );
-                },
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => HallCatalogPage(user: _user)),
+                ),
                 child: Text(AppLocalizations.of(context)!.openFullCatalog),
               ),
             ],
@@ -1572,24 +1486,20 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    AppLocalizations.of(context)!.showingHalls(halls.length),
-                    style: TextStyle(color: Colors.grey.shade700),
-                  ),
+                  Text(AppLocalizations.of(context)!.showingHalls(halls.length),
+                      style: TextStyle(color: Colors.grey.shade700)),
                   const SizedBox(height: 10),
                   ...halls.map((hall) => HallPreviewCard(
                         hall: Map<String, dynamic>.from(hall as Map),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => HallDetailPage(
-                                user: _user,
-                                hall: Map<String, dynamic>.from(hall),
-                              ),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => HallDetailPage(
+                              user: _user,
+                              hall: Map<String, dynamic>.from(hall),
                             ),
-                          );
-                        },
+                          ),
+                        ),
                       )),
                 ],
               );
@@ -1603,39 +1513,30 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
             builder: (context, snapshot) {
               if (snapshot.connectionState != ConnectionState.done) {
                 return const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(24),
-                    child: CircularProgressIndicator(),
-                  ),
-                );
+                    child: Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator()));
               }
               final halls = snapshot.data ?? [];
-              if (halls.isEmpty) {
-                return const Text('No halls available right now.');
-              }
+              if (halls.isEmpty) return const Text('No halls available right now.');
               return Column(
                 children: halls
                     .map((hall) => HallPreviewCard(
                           hall: Map<String, dynamic>.from(hall as Map),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => HallDetailPage(
-                                  user: _user,
-                                  hall: Map<String, dynamic>.from(hall),
-                                ),
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => HallDetailPage(
+                                user: _user,
+                                hall: Map<String, dynamic>.from(hall),
                               ),
-                            );
-                          },
+                            ),
+                          ),
                         ))
                     .toList(),
               );
             },
           ),
           const SizedBox(height: 24),
-          Text('Recommended for you',
-              style: Theme.of(context).textTheme.titleLarge),
+          Text('Recommended for you', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 12),
           FutureBuilder<List<dynamic>>(
             future: _recommendedFuture,
@@ -1645,24 +1546,21 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                 return const Center(child: CircularProgressIndicator());
               }
               if (halls.isEmpty) {
-                return const Text(
-                    'Update your preferred category to get suggestions.');
+                return const Text('Update your preferred category to get suggestions.');
               }
               return Column(
                 children: halls
                     .map((hall) => HallPreviewCard(
                           hall: Map<String, dynamic>.from(hall as Map),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => HallDetailPage(
-                                  user: _user,
-                                  hall: Map<String, dynamic>.from(hall),
-                                ),
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => HallDetailPage(
+                                user: _user,
+                                hall: Map<String, dynamic>.from(hall),
                               ),
-                            );
-                          },
+                            ),
+                          ),
                         ))
                     .toList(),
               );
@@ -1676,7 +1574,6 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
 
 class HallCatalogPage extends StatefulWidget {
   final Map<String, dynamic> user;
-
   const HallCatalogPage({super.key, required this.user});
 
   @override
@@ -1684,12 +1581,12 @@ class HallCatalogPage extends StatefulWidget {
 }
 
 class _HallCatalogPageState extends State<HallCatalogPage> {
-final _searchController = TextEditingController();
-final _searchFocusNode = FocusNode();
+  final _searchController = TextEditingController();
+  final _searchFocusNode = FocusNode();
   final _cityController = TextEditingController();
-final _cityFocusNode = FocusNode();
+  final _cityFocusNode = FocusNode();
   final _nearestLocationController = TextEditingController();
-final _nearestFocusNode = FocusNode();
+  final _nearestFocusNode = FocusNode();
   final _minCapacityController = TextEditingController();
   final _maxRentController = TextEditingController();
   String _selectedCategory = 'All';
@@ -1718,9 +1615,7 @@ final _nearestFocusNode = FocusNode();
     );
   }
 
-  void _applyFilters() {
-    setState(() => _hallsFuture = _loadHalls());
-  }
+  void _applyFilters() => setState(() => _hallsFuture = _loadHalls());
 
   Future<void> _loadSearchSuggestions() async {
     try {
@@ -1731,37 +1626,26 @@ final _nearestFocusNode = FocusNode();
         final hall = Map<String, dynamic>.from(item as Map);
         final hallName = hall['name']?.toString().trim() ?? '';
         final city = hall['location']?.toString().trim() ?? '';
-        if (hallName.isNotEmpty) {
-          suggestions.add(hallName);
-        }
-        if (city.isNotEmpty) {
-          suggestions.add(city);
-        }
+        if (hallName.isNotEmpty) suggestions.add(hallName);
+        if (city.isNotEmpty) suggestions.add(city);
       }
       setState(() {
         _searchSuggestions = suggestions.toList()
-          ..sort(
-            (a, b) => a.toLowerCase().compareTo(b.toLowerCase()),
-          );
+          ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
         _citySuggestions = halls
             .map((item) => Map<String, dynamic>.from(item as Map))
             .map((hall) => hall['location']?.toString().trim() ?? '')
             .where((city) => city.isNotEmpty)
             .toSet()
             .toList()
-          ..sort(
-            (a, b) => a.toLowerCase().compareTo(b.toLowerCase()),
-          );
+          ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
       });
     } catch (_) {}
   }
 
   Iterable<String> _matchingSearchSuggestions(String query) {
     final normalized = query.trim().toLowerCase();
-    if (normalized.isEmpty) {
-      return const [];
-    }
-
+    if (normalized.isEmpty) return const [];
     final startsWithMatches = <String>[];
     final containsMatches = <String>[];
     for (final suggestion in _searchSuggestions) {
@@ -1777,9 +1661,7 @@ final _nearestFocusNode = FocusNode();
 
   Iterable<String> _matchingCitySuggestions(String query) {
     final normalized = query.trim().toLowerCase();
-    if (normalized.isEmpty) {
-      return _citySuggestions.take(8);
-    }
+    if (normalized.isEmpty) return _citySuggestions.take(8);
     final startsWithMatches = <String>[];
     final containsMatches = <String>[];
     for (final suggestion in _citySuggestions) {
@@ -1795,13 +1677,10 @@ final _nearestFocusNode = FocusNode();
 
   void _scheduleSearchApply() {
     _searchDebounce?.cancel();
-    _searchDebounce = Timer(
-      const Duration(milliseconds: 250),
-      () {
-        if (!mounted) return;
-        _applyFilters();
-      },
-    );
+    _searchDebounce = Timer(const Duration(milliseconds: 250), () {
+      if (!mounted) return;
+      _applyFilters();
+    });
   }
 
   void _clearFilters() {
@@ -1820,29 +1699,18 @@ final _nearestFocusNode = FocusNode();
 
   String? _filtersSummary() {
     final parts = <String>[];
-    final search = _searchController.text.trim();
-    final city = _cityController.text.trim();
-    final nearest = _nearestLocationController.text.trim();
-    final minCapacity = _minCapacityController.text.trim();
-    final maxRent = _maxRentController.text.trim();
-
-    if (search.isNotEmpty) parts.add('Search: $search');
-    if (city.isNotEmpty) parts.add('City: $city');
-    if (nearest.isNotEmpty) parts.add('Nearest: $nearest');
+    if (_searchController.text.trim().isNotEmpty) parts.add('Search: ${_searchController.text.trim()}');
+    if (_cityController.text.trim().isNotEmpty) parts.add('City: ${_cityController.text.trim()}');
+    if (_nearestLocationController.text.trim().isNotEmpty) parts.add('Nearest: ${_nearestLocationController.text.trim()}');
     if (_selectedCategory != 'All') parts.add('Category: $_selectedCategory');
-    if (_selectedSortBy != 'featured') {
-      parts.add('Sort: ${hallSortOptions[_selectedSortBy] ?? _selectedSortBy}');
-    }
-    if (minCapacity.isNotEmpty) parts.add('Min guests: $minCapacity');
-    if (maxRent.isNotEmpty) parts.add('Max rent: $maxRent');
-
-    if (parts.isEmpty) {
-      return null;
-    }
+    if (_selectedSortBy != 'featured') parts.add('Sort: ${hallSortOptions[_selectedSortBy] ?? _selectedSortBy}');
+    if (_minCapacityController.text.trim().isNotEmpty) parts.add('Min guests: ${_minCapacityController.text.trim()}');
+    if (_maxRentController.text.trim().isNotEmpty) parts.add('Max rent: ${_maxRentController.text.trim()}');
+    if (parts.isEmpty) return null;
     return parts.join('  •  ');
   }
 
-@override
+  @override
   void dispose() {
     _searchDebounce?.cancel();
     _searchController.dispose();
@@ -1868,7 +1736,7 @@ final _nearestFocusNode = FocusNode();
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-RawAutocomplete<String>(
+                  RawAutocomplete<String>(
                     textEditingController: _searchController,
                     focusNode: _searchFocusNode,
                     optionsBuilder: (textEditingValue) =>
@@ -1877,8 +1745,7 @@ RawAutocomplete<String>(
                       _searchController.text = selection;
                       _applyFilters();
                     },
-                    fieldViewBuilder:
-                        (context, controller, focusNode, onFieldSubmitted) {
+                    fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
                       return TextField(
                         controller: controller,
                         focusNode: focusNode,
@@ -1902,10 +1769,7 @@ RawAutocomplete<String>(
                           elevation: 4,
                           borderRadius: BorderRadius.circular(16),
                           child: ConstrainedBox(
-                            constraints: const BoxConstraints(
-                              maxWidth: 480,
-                              maxHeight: 240,
-                            ),
+                            constraints: const BoxConstraints(maxWidth: 480, maxHeight: 240),
                             child: ListView.builder(
                               padding: const EdgeInsets.symmetric(vertical: 8),
                               shrinkWrap: true,
@@ -1926,7 +1790,7 @@ RawAutocomplete<String>(
                     },
                   ),
                   const SizedBox(height: 10),
-RawAutocomplete<String>(
+                  RawAutocomplete<String>(
                     textEditingController: _cityController,
                     focusNode: _cityFocusNode,
                     optionsBuilder: (textEditingValue) =>
@@ -1935,8 +1799,7 @@ RawAutocomplete<String>(
                       _cityController.text = selection;
                       _applyFilters();
                     },
-                    fieldViewBuilder:
-                        (context, controller, focusNode, onFieldSubmitted) {
+                    fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
                       return TextField(
                         controller: controller,
                         focusNode: focusNode,
@@ -1960,10 +1823,7 @@ RawAutocomplete<String>(
                           elevation: 4,
                           borderRadius: BorderRadius.circular(16),
                           child: ConstrainedBox(
-                            constraints: const BoxConstraints(
-                              maxWidth: 480,
-                              maxHeight: 220,
-                            ),
+                            constraints: const BoxConstraints(maxWidth: 480, maxHeight: 220),
                             child: ListView.builder(
                               padding: const EdgeInsets.symmetric(vertical: 8),
                               shrinkWrap: true,
@@ -1984,7 +1844,7 @@ RawAutocomplete<String>(
                     },
                   ),
                   const SizedBox(height: 10),
-RawAutocomplete<String>(
+                  RawAutocomplete<String>(
                     textEditingController: _nearestLocationController,
                     focusNode: _nearestFocusNode,
                     optionsBuilder: (textEditingValue) =>
@@ -1993,8 +1853,7 @@ RawAutocomplete<String>(
                       _nearestLocationController.text = selection;
                       _applyFilters();
                     },
-                    fieldViewBuilder:
-                        (context, controller, focusNode, onFieldSubmitted) {
+                    fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
                       return TextField(
                         controller: controller,
                         focusNode: focusNode,
@@ -2018,10 +1877,7 @@ RawAutocomplete<String>(
                           elevation: 4,
                           borderRadius: BorderRadius.circular(16),
                           child: ConstrainedBox(
-                            constraints: const BoxConstraints(
-                              maxWidth: 480,
-                              maxHeight: 220,
-                            ),
+                            constraints: const BoxConstraints(maxWidth: 480, maxHeight: 220),
                             child: ListView.builder(
                               padding: const EdgeInsets.symmetric(vertical: 8),
                               shrinkWrap: true,
@@ -2045,26 +1901,19 @@ RawAutocomplete<String>(
                   DropdownButtonFormField<String>(
                     initialValue: _selectedCategory,
                     items: hallCategories
-                        .map((item) =>
-                            DropdownMenuItem(value: item, child: Text(item)))
+                        .map((item) => DropdownMenuItem(value: item, child: Text(item)))
                         .toList(),
-                    onChanged: (value) =>
-                        setState(() {
-                          _selectedCategory = value ?? 'All';
-                          _scheduleSearchApply();
-                        }),
+                    onChanged: (value) => setState(() {
+                      _selectedCategory = value ?? 'All';
+                      _scheduleSearchApply();
+                    }),
                     decoration: const InputDecoration(labelText: 'Category'),
                   ),
                   const SizedBox(height: 10),
                   DropdownButtonFormField<String>(
                     initialValue: _selectedSortBy,
                     items: hallSortOptions.entries
-                        .map(
-                          (entry) => DropdownMenuItem(
-                            value: entry.key,
-                            child: Text(entry.value),
-                          ),
-                        )
+                        .map((entry) => DropdownMenuItem(value: entry.key, child: Text(entry.value)))
                         .toList(),
                     onChanged: (value) => setState(() {
                       _selectedSortBy = value ?? 'featured';
@@ -2080,8 +1929,7 @@ RawAutocomplete<String>(
                           controller: _minCapacityController,
                           onChanged: (_) => _scheduleSearchApply(),
                           keyboardType: TextInputType.number,
-                          decoration:
-                              const InputDecoration(labelText: 'Min guests'),
+                          decoration: const InputDecoration(labelText: 'Min guests'),
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -2090,8 +1938,7 @@ RawAutocomplete<String>(
                           controller: _maxRentController,
                           onChanged: (_) => _scheduleSearchApply(),
                           keyboardType: TextInputType.number,
-                          decoration:
-                              const InputDecoration(labelText: 'Max rent (Rs.)'),
+                          decoration: const InputDecoration(labelText: 'Max rent (Rs.)'),
                         ),
                       ),
                     ],
@@ -2100,27 +1947,18 @@ RawAutocomplete<String>(
                     const SizedBox(height: 14),
                     Align(
                       alignment: Alignment.centerLeft,
-                      child: Text(
-                        _filtersSummary()!,
-                        style: TextStyle(color: Colors.grey.shade700),
-                      ),
+                      child: Text(_filtersSummary()!, style: TextStyle(color: Colors.grey.shade700)),
                     ),
                   ],
                   const SizedBox(height: 16),
                   Row(
                     children: [
                       Expanded(
-                        child: FilledButton(
-                          onPressed: _applyFilters,
-                          child: const Text('Apply filters'),
-                        ),
+                        child: FilledButton(onPressed: _applyFilters, child: const Text('Apply filters')),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: OutlinedButton(
-                          onPressed: _clearFilters,
-                          child: const Text('Clear'),
-                        ),
+                        child: OutlinedButton(onPressed: _clearFilters, child: const Text('Clear')),
                       ),
                     ],
                   ),
@@ -2134,34 +1972,24 @@ RawAutocomplete<String>(
             builder: (context, snapshot) {
               if (snapshot.connectionState != ConnectionState.done) {
                 return const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(24),
-                    child: CircularProgressIndicator(),
-                  ),
-                );
+                    child: Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator()));
               }
-              if (snapshot.hasError) {
-                return Text(snapshot.error.toString());
-              }
+              if (snapshot.hasError) return Text(snapshot.error.toString());
               final halls = snapshot.data ?? [];
-              if (halls.isEmpty) {
-                return const Text('No halls matched your filters.');
-              }
+              if (halls.isEmpty) return const Text('No halls matched your filters.');
               return Column(
                 children: halls
                     .map((hall) => HallPreviewCard(
                           hall: Map<String, dynamic>.from(hall as Map),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => HallDetailPage(
-                                  user: widget.user,
-                                  hall: Map<String, dynamic>.from(hall),
-                                ),
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => HallDetailPage(
+                                user: widget.user,
+                                hall: Map<String, dynamic>.from(hall),
                               ),
-                            );
-                          },
+                            ),
+                          ),
                         ))
                     .toList(),
               );
@@ -2172,6 +2000,10 @@ RawAutocomplete<String>(
     );
   }
 }
+
+// ═══════════════════════════════════════════════════
+//  HALL DETAIL PAGE  — Photographer + Booking
+// ═══════════════════════════════════════════════════
 
 class HallDetailPage extends StatefulWidget {
   final Map<String, dynamic> user;
@@ -2202,6 +2034,9 @@ class _HallDetailPageState extends State<HallDetailPage> {
   List<Map<String, dynamic>> _selectedMenus = [];
   double _menuExtraCost = 0.0;
 
+  // ── PHOTOGRAPHER state ──────────────────────────
+  PhotographerModel? _selectedPhotographer;
+
   @override
   void initState() {
     super.initState();
@@ -2224,7 +2059,6 @@ class _HallDetailPageState extends State<HallDetailPage> {
   }
 
   void _onGuestCountChanged() {
-    // Update estimated cost live while user edits guest count.
     if (!mounted) return;
     setState(() {});
   }
@@ -2238,9 +2072,7 @@ class _HallDetailPageState extends State<HallDetailPage> {
 
   bool _isSelectedDateAvailable(List<String> availableDates) {
     final selectedDate = _dateController.text.trim();
-    if (selectedDate.isEmpty) {
-      return false;
-    }
+    if (selectedDate.isEmpty) return false;
     return availableDates.contains(selectedDate);
   }
 
@@ -2258,11 +2090,7 @@ class _HallDetailPageState extends State<HallDetailPage> {
               .toList();
       if (!_isSelectedDateAvailable(availableDates)) {
         if (!mounted) return;
-        showAppSnackBar(
-          context,
-          'That date is no longer available. Please choose another one.',
-          isError: true,
-        );
+        showAppSnackBar(context, 'That date is no longer available. Please choose another one.', isError: true);
         setState(() {
           _availabilityFuture = api.getAvailability(widget.hall['hall_id'] as int);
         });
@@ -2272,7 +2100,7 @@ class _HallDetailPageState extends State<HallDetailPage> {
 
     setState(() => _submitting = true);
     try {
-      await api.createBooking({
+      final payload = <String, dynamic>{
         'hall_id': widget.hall['hall_id'],
         'customer_id': widget.user['id'],
         'booking_date': _dateController.text.trim(),
@@ -2280,8 +2108,17 @@ class _HallDetailPageState extends State<HallDetailPage> {
         'guest_count': int.tryParse(_guestCountController.text.trim()) ?? 100,
         'special_request': _requestController.text.trim(),
         'additional_notes': _notesController.text.trim(),
-        'menu_items': _selectedMenus.map((menu) => {'menu_id': menu['menu_id'], 'quantity': menu['quantity']}).toList(),
-      });
+        'menu_items': _selectedMenus
+            .map((menu) => {'menu_id': menu['menu_id'], 'quantity': menu['quantity']})
+            .toList(),
+      };
+
+      // Add photographer if selected
+      if (_selectedPhotographer != null) {
+        payload['photographer_id'] = _selectedPhotographer!.photographerId;
+      }
+
+      await api.createBooking(payload);
       if (!mounted) return;
       showAppSnackBar(context, 'Booking request submitted.');
       Navigator.pop(context);
@@ -2316,17 +2153,13 @@ class _HallDetailPageState extends State<HallDetailPage> {
       showAppSnackBar(context, 'Write your feedback first.', isError: true);
       return;
     }
-
     setState(() => _submittingFeedback = true);
     try {
-      await api.submitHallFeedback(
-        widget.hall['hall_id'] as int,
-        {
-          'customer_id': customerId,
-          'rating': _feedbackRating,
-          'comment': _feedbackController.text.trim(),
-        },
-      );
+      await api.submitHallFeedback(widget.hall['hall_id'] as int, {
+        'customer_id': customerId,
+        'rating': _feedbackRating,
+        'comment': _feedbackController.text.trim(),
+      });
       if (!mounted) return;
       setState(() {
         _hydratedFeedbackDraft = false;
@@ -2348,9 +2181,11 @@ class _HallDetailPageState extends State<HallDetailPage> {
     final isGuest = widget.user['id'] == null;
     final baseRent = (hall['rent'] as num?)?.toDouble() ?? 0.0;
     final guestCount = int.tryParse(_guestCountController.text.trim()) ?? 0;
-    final estimated = calculateAdjustedCost(baseRent, guestCount) + _menuExtraCost;
+    final photographerCost = _selectedPhotographer?.pricePerDay ?? 0.0;
+    final estimated = calculateAdjustedCost(baseRent, guestCount) + _menuExtraCost + photographerCost;
     final distance = hall['distance_km'];
     final selectedDateAvailable = _isSelectedDateAvailable(_latestAvailableDates);
+
     return Scaffold(
       appBar: AppBar(title: Text(hall['name']?.toString() ?? 'Hall details')),
       body: ListView(
@@ -2381,12 +2216,7 @@ class _HallDetailPageState extends State<HallDetailPage> {
                     borderRadius: BorderRadius.circular(24),
                     child: Stack(
                       children: [
-                        buildHallImage(
-                          _selectedImage,
-                          height: 280,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        ),
+                        buildHallImage(_selectedImage, height: 280, width: double.infinity, fit: BoxFit.cover),
                         Positioned.fill(
                           child: DecoratedBox(
                             decoration: BoxDecoration(
@@ -2418,45 +2248,31 @@ class _HallDetailPageState extends State<HallDetailPage> {
                                       spacing: 8,
                                       runSpacing: 8,
                                       children: [
-                                        _detailBadge(
-                                          context,
-                                          icon: Icons.place_outlined,
-                                          label: hall['location']?.toString() ??
-                                              'Location not set',
-                                        ),
-                                        _detailBadge(
-                                          context,
-                                          icon: Icons.celebration_outlined,
-                                          label: hall['category']?.toString() ??
-                                              'Category',
-                                        ),
+                                        _detailBadge(context,
+                                            icon: Icons.place_outlined,
+                                            label: hall['location']?.toString() ?? 'Location not set'),
+                                        _detailBadge(context,
+                                            icon: Icons.celebration_outlined,
+                                            label: hall['category']?.toString() ?? 'Category'),
                                         if (distance != null)
-                                          _detailBadge(
-                                            context,
-                                            icon: Icons.near_me_outlined,
-                                            label:
-                                                '${distance.toString()} km away',
-                                          ),
+                                          _detailBadge(context,
+                                              icon: Icons.near_me_outlined,
+                                              label: '${distance.toString()} km away'),
                                       ],
                                     ),
                                     const SizedBox(height: 12),
                                     Text(
                                       hall['name']?.toString() ?? '',
-                                      style: theme.textTheme.headlineMedium
-                                          ?.copyWith(
+                                      style: theme.textTheme.headlineMedium?.copyWith(
                                         color: Colors.white,
                                         fontWeight: FontWeight.w700,
                                       ),
                                     ),
                                     const SizedBox(height: 6),
                                     Text(
-                                      hall['description']?.toString() ??
-                                          'A polished venue for memorable events.',
-                                      style:
-                                          theme.textTheme.bodyLarge?.copyWith(
-                                        color: Colors.white.withValues(
-                                          alpha: 0.88,
-                                        ),
+                                      hall['description']?.toString() ?? 'A polished venue for memorable events.',
+                                      style: theme.textTheme.bodyLarge?.copyWith(
+                                        color: Colors.white.withValues(alpha: 0.88),
                                         height: 1.45,
                                       ),
                                     ),
@@ -2465,36 +2281,21 @@ class _HallDetailPageState extends State<HallDetailPage> {
                               ),
                               const SizedBox(width: 12),
                               Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 14,
-                                  vertical: 12,
-                                ),
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                                 decoration: BoxDecoration(
                                   color: Colors.white.withValues(alpha: 0.14),
                                   borderRadius: BorderRadius.circular(18),
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.16),
-                                  ),
+                                  border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      'Starting from',
-                                      style:
-                                          theme.textTheme.labelLarge?.copyWith(
-                                        color: Colors.white70,
-                                      ),
-                                    ),
+                                    Text('Starting from',
+                                        style: theme.textTheme.labelLarge?.copyWith(color: Colors.white70)),
                                     const SizedBox(height: 4),
-                                    Text(
-                                      'Rs. ${hall['rent']}',
-                                      style:
-                                          theme.textTheme.titleLarge?.copyWith(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
+                                    Text('Rs. ${hall['rent']}',
+                                        style: theme.textTheme.titleLarge?.copyWith(
+                                            color: Colors.white, fontWeight: FontWeight.w700)),
                                   ],
                                 ),
                               ),
@@ -2521,23 +2322,14 @@ class _HallDetailPageState extends State<HallDetailPage> {
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(18),
                               border: Border.all(
-                                color: selected
-                                    ? Colors.white
-                                    : Colors.white.withValues(alpha: 0.14),
+                                color: selected ? Colors.white : Colors.white.withValues(alpha: 0.14),
                                 width: selected ? 1.8 : 1,
                               ),
-                              color: Colors.white.withValues(
-                                alpha: selected ? 0.16 : 0.08,
-                              ),
+                              color: Colors.white.withValues(alpha: selected ? 0.16 : 0.08),
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(14),
-                              child: buildHallImage(
-                                image,
-                                height: 86,
-                                width: 116,
-                                fit: BoxFit.cover,
-                              ),
+                              child: buildHallImage(image, height: 86, width: 116, fit: BoxFit.cover),
                             ),
                           ),
                         );
@@ -2551,34 +2343,24 @@ class _HallDetailPageState extends State<HallDetailPage> {
                     spacing: 12,
                     runSpacing: 12,
                     children: [
-                      _infoPanel(
-                        context,
-                        icon: Icons.groups_2_outlined,
-                        title: 'Capacity',
-                        value: '${hall['capacity']} guests',
-                      ),
-                      _infoPanel(
-                        context,
-                        icon: Icons.payments_outlined,
-                        title: 'Estimated total',
-                        value:
-                            'Rs. ${estimated.toStringAsFixed(0)} for $guestCount guests',
-                      ),
-                      _infoPanel(
-                        context,
-                        icon: Icons.call_outlined,
-                        title: 'Contact',
-                        value:
-                            '${hall['contact_person']} - ${hall['phone_number']}',
-                      ),
-                      _infoPanel(
-                        context,
-                        icon: Icons.mail_outline,
-                        title: 'Email',
-                        value: hall['email']?.toString().isNotEmpty == true
-                            ? hall['email'].toString()
-                            : 'Contact details available on request',
-                      ),
+                      _infoPanel(context,
+                          icon: Icons.groups_2_outlined,
+                          title: 'Capacity',
+                          value: '${hall['capacity']} guests'),
+                      _infoPanel(context,
+                          icon: Icons.payments_outlined,
+                          title: 'Estimated total',
+                          value: 'Rs. ${estimated.toStringAsFixed(0)} for $guestCount guests'),
+                      _infoPanel(context,
+                          icon: Icons.call_outlined,
+                          title: 'Contact',
+                          value: '${hall['contact_person']} - ${hall['phone_number']}'),
+                      _infoPanel(context,
+                          icon: Icons.mail_outline,
+                          title: 'Email',
+                          value: hall['email']?.toString().isNotEmpty == true
+                              ? hall['email'].toString()
+                              : 'Contact details available on request'),
                     ],
                   ),
                 ],
@@ -2589,20 +2371,14 @@ class _HallDetailPageState extends State<HallDetailPage> {
           Card(
             elevation: 0,
             color: const Color(0xFFFFFBF7),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
             child: Padding(
               padding: const EdgeInsets.all(18),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Quick overview',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                  Text('Quick overview',
+                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
                   const SizedBox(height: 10),
                   Text(
                     'Photos stay visible here so guests can compare the venue while checking availability, pricing, and booking details.',
@@ -2613,17 +2389,16 @@ class _HallDetailPageState extends State<HallDetailPage> {
             ),
           ),
           const SizedBox(height: 12),
+          // ── FEEDBACK SECTION (unchanged) ───────────────────
           FutureBuilder<Map<String, dynamic>>(
             future: _feedbackFuture,
             builder: (context, snapshot) {
               final data = snapshot.data ?? const <String, dynamic>{};
-              final averageRating =
-                  (data['average_rating'] as num?)?.toDouble() ?? 0.0;
+              final averageRating = (data['average_rating'] as num?)?.toDouble() ?? 0.0;
               final feedbackCount = (data['feedback_count'] as num?)?.toInt() ?? 0;
-              final feedbackItems =
-                  (data['feedback'] as List<dynamic>? ?? const [])
-                      .map((item) => Map<String, dynamic>.from(item as Map))
-                      .toList();
+              final feedbackItems = (data['feedback'] as List<dynamic>? ?? const [])
+                  .map((item) => Map<String, dynamic>.from(item as Map))
+                  .toList();
               final customerId = widget.user['id'] as int?;
               if (!_hydratedFeedbackDraft && customerId != null) {
                 Map<String, dynamic>? ownFeedback;
@@ -2634,10 +2409,8 @@ class _HallDetailPageState extends State<HallDetailPage> {
                   }
                 }
                 if (ownFeedback != null) {
-                  _feedbackController.text =
-                      ownFeedback['comment']?.toString() ?? '';
-                  _feedbackRating =
-                      (ownFeedback['rating'] as num?)?.toInt() ?? 5;
+                  _feedbackController.text = ownFeedback['comment']?.toString() ?? '';
+                  _feedbackRating = (ownFeedback['rating'] as num?)?.toInt() ?? 5;
                 }
                 _hydratedFeedbackDraft = true;
               }
@@ -2649,12 +2422,8 @@ class _HallDetailPageState extends State<HallDetailPage> {
                     children: [
                       Row(
                         children: [
-                          Text(
-                            'Feedback',
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
+                          Text('Feedback',
+                              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
                           const Spacer(),
                           Icon(Icons.star_rounded, color: Colors.amber.shade700),
                           const SizedBox(width: 4),
@@ -2672,15 +2441,12 @@ class _HallDetailPageState extends State<HallDetailPage> {
                           initialValue: _feedbackRating,
                           decoration: const InputDecoration(labelText: 'Your rating'),
                           items: const [1, 2, 3, 4, 5]
-                              .map(
-                                (rating) => DropdownMenuItem(
-                                  value: rating,
-                                  child: Text('$rating star${rating == 1 ? '' : 's'}'),
-                                ),
-                              )
+                              .map((rating) => DropdownMenuItem(
+                                    value: rating,
+                                    child: Text('$rating star${rating == 1 ? '' : 's'}'),
+                                  ))
                               .toList(),
-                          onChanged: (value) =>
-                              setState(() => _feedbackRating = value ?? 5),
+                          onChanged: (value) => setState(() => _feedbackRating = value ?? 5),
                         ),
                         const SizedBox(height: 12),
                         TextField(
@@ -2694,77 +2460,55 @@ class _HallDetailPageState extends State<HallDetailPage> {
                         const SizedBox(height: 12),
                         Align(
                           alignment: Alignment.centerLeft,
-                            child: FilledButton.tonal(
-                              onPressed: _submittingFeedback ? null : _submitFeedback,
-                              child: Text(
-                                _submittingFeedback
-                                    ? 'Submitting...'
-                                    : feedbackItems.any(
-                                            (item) =>
-                                                item['customer_id'] ==
-                                                widget.user['id'],
-                                          )
-                                        ? 'Update feedback'
-                                        : 'Submit feedback',
-                              ),
-                            ),
-                          ),
-                        const SizedBox(height: 16),
-                      ],
-                      if (feedbackItems.isEmpty)
-                        Text(
-                          isGuest
-                              ? 'No feedback available yet.'
-                              : 'No feedback yet. Be the first to review this hall.',
-                        )
-                      else
-                        ...feedbackItems.map(
-                          (item) => Container(
-                            width: double.infinity,
-                            margin: const EdgeInsets.only(top: 10),
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF7F2F4),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        item['customer_name']?.toString() ??
-                                            'Customer',
-                                        style: theme.textTheme.titleSmall?.copyWith(
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                    ),
-                                    Text(
-                                      '${item['rating']} / 5',
-                                      style: TextStyle(
-                                        color: Colors.amber.shade800,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 6),
-                                Text(item['comment']?.toString() ?? ''),
-                                const SizedBox(height: 6),
-                                Text(
-                                  formatMessageTimestamp(
-                                    item['created_at']?.toString() ?? '',
-                                  ),
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: Colors.grey.shade700,
-                                  ),
-                                ),
-                              ],
+                          child: FilledButton.tonal(
+                            onPressed: _submittingFeedback ? null : _submitFeedback,
+                            child: Text(
+                              _submittingFeedback
+                                  ? 'Submitting...'
+                                  : feedbackItems.any((item) => item['customer_id'] == widget.user['id'])
+                                      ? 'Update feedback'
+                                      : 'Submit feedback',
                             ),
                           ),
                         ),
+                        const SizedBox(height: 16),
+                      ],
+                      if (feedbackItems.isEmpty)
+                        Text(isGuest ? 'No feedback available yet.' : 'No feedback yet. Be the first to review this hall.')
+                      else
+                        ...feedbackItems.map((item) => Container(
+                              width: double.infinity,
+                              margin: const EdgeInsets.only(top: 10),
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF7F2F4),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          item['customer_name']?.toString() ?? 'Customer',
+                                          style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                                        ),
+                                      ),
+                                      Text('${item['rating']} / 5',
+                                          style: TextStyle(color: Colors.amber.shade800, fontWeight: FontWeight.w700)),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(item['comment']?.toString() ?? ''),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    formatMessageTimestamp(item['created_at']?.toString() ?? ''),
+                                    style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey.shade700),
+                                  ),
+                                ],
+                              ),
+                            )),
                     ],
                   ),
                 ),
@@ -2772,12 +2516,12 @@ class _HallDetailPageState extends State<HallDetailPage> {
             },
           ),
           const SizedBox(height: 12),
+          // ── AVAILABILITY SECTION (unchanged) ──────────────
           FutureBuilder<Map<String, dynamic>>(
             future: _availabilityFuture,
             builder: (context, snapshot) {
               final availableDates =
-                  (snapshot.data?['available_dates'] as List<dynamic>? ??
-                          const [])
+                  (snapshot.data?['available_dates'] as List<dynamic>? ?? const [])
                       .map((item) => item.toString())
                       .toList();
               _latestAvailableDates = availableDates;
@@ -2788,12 +2532,8 @@ class _HallDetailPageState extends State<HallDetailPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Next available dates',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
+                      Text('Next available dates',
+                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
                       const SizedBox(height: 10),
                       if (dates.isEmpty)
                         const Text('Loading availability...')
@@ -2802,17 +2542,15 @@ class _HallDetailPageState extends State<HallDetailPage> {
                           spacing: 8,
                           runSpacing: 8,
                           children: dates
-                              .map(
-                                (item) => ActionChip(
-                                  label: Text(item),
-                                  onPressed: isGuest
-                                      ? null
-                                      : () {
-                                          _dateController.text = item;
-                                          setState(() {});
-                                        },
-                                ),
-                              )
+                              .map((item) => ActionChip(
+                                    label: Text(item),
+                                    onPressed: isGuest
+                                        ? null
+                                        : () {
+                                            _dateController.text = item;
+                                            setState(() {});
+                                          },
+                                  ))
                               .toList(),
                         ),
                     ],
@@ -2822,6 +2560,7 @@ class _HallDetailPageState extends State<HallDetailPage> {
             },
           ),
           const SizedBox(height: 12),
+          // ── BOOKING FORM ──────────────────────────────────
           if (isGuest)
             Card(
               child: Padding(
@@ -2829,29 +2568,19 @@ class _HallDetailPageState extends State<HallDetailPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Sign in to request a booking',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                    Text('Sign in to request a booking',
+                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
                     const SizedBox(height: 8),
                     Text(
                       'Everyone can browse hall photos and details. Login or register when you are ready to send a booking request.',
-                      style:
-                          TextStyle(color: Colors.grey.shade700, height: 1.45),
+                      style: TextStyle(color: Colors.grey.shade700, height: 1.45),
                     ),
                     const SizedBox(height: 14),
                     FilledButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                const AuthScreen(initialLogin: true),
-                          ),
-                        );
-                      },
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const AuthScreen(initialLogin: true)),
+                      ),
                       child: const Text('Login to continue'),
                     ),
                   ],
@@ -2874,8 +2603,7 @@ class _HallDetailPageState extends State<HallDetailPage> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    if (_dateController.text.trim().isNotEmpty &&
-                        !selectedDateAvailable)
+                    if (_dateController.text.trim().isNotEmpty && !selectedDateAvailable)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: Align(
@@ -2888,34 +2616,23 @@ class _HallDetailPageState extends State<HallDetailPage> {
                       ),
                     DropdownButtonFormField<String>(
                       initialValue: _eventType,
-                      items: const [
-                        'Wedding',
-                        'Walima',
-                        'Mehndi',
-                        'Birthday',
-                        'Corporate'
-                      ]
-                          .map((item) =>
-                              DropdownMenuItem(value: item, child: Text(item)))
+                      items: const ['Wedding', 'Walima', 'Mehndi', 'Birthday', 'Corporate']
+                          .map((item) => DropdownMenuItem(value: item, child: Text(item)))
                           .toList(),
-                      onChanged: (value) =>
-                          setState(() => _eventType = value ?? 'Wedding'),
-                      decoration:
-                          const InputDecoration(labelText: 'Event type'),
+                      onChanged: (value) => setState(() => _eventType = value ?? 'Wedding'),
+                      decoration: const InputDecoration(labelText: 'Event type'),
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: _guestCountController,
                       keyboardType: TextInputType.number,
-                      decoration:
-                          const InputDecoration(labelText: 'Guest count'),
+                      decoration: const InputDecoration(labelText: 'Guest count'),
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: _requestController,
                       maxLines: 3,
-                      decoration:
-                          const InputDecoration(labelText: 'Special request'),
+                      decoration: const InputDecoration(labelText: 'Special request'),
                     ),
                     const SizedBox(height: 12),
                     TextField(
@@ -2927,22 +2644,21 @@ class _HallDetailPageState extends State<HallDetailPage> {
                       ),
                     ),
                     const SizedBox(height: 12),
+                    // ── SELECT FOOD button (unchanged) ────────
                     Row(
                       children: [
                         Expanded(
                           child: OutlinedButton.icon(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => FoodMenuScreen(
-                                    hallId: widget.hall['hall_id'] as int,
-                                    hallName: widget.hall['name'] as String,
-                                    onMenuSelected: _onMenuSelected,
-                                  ),
+                            onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => FoodMenuScreen(
+                                  hallId: widget.hall['hall_id'] as int,
+                                  hallName: widget.hall['name'] as String,
+                                  onMenuSelected: _onMenuSelected,
                                 ),
-                              );
-                            },
+                              ),
+                            ),
                             icon: const Icon(Icons.restaurant),
                             label: const Text('Select Food'),
                           ),
@@ -2963,12 +2679,57 @@ class _HallDetailPageState extends State<HallDetailPage> {
                         style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.w500),
                       ),
                     ],
+                    const SizedBox(height: 12),
+                    // ── SELECT PHOTOGRAPHER button ─────────────
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () async {
+                              final result = await Navigator.push<PhotographerModel?>(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => PhotographerListScreen(
+                                    hallId: widget.hall['hall_id'] as int,
+                                    selectedPhotographer: _selectedPhotographer,
+                                    onPhotographerSelected: (p) =>
+                                        setState(() => _selectedPhotographer = p),
+                                  ),
+                                ),
+                              );
+                              if (result != null) {
+                                setState(() => _selectedPhotographer = result);
+                              }
+                            },
+                            icon: const Icon(Icons.camera_alt_outlined),
+                            label: Text(
+                              _selectedPhotographer == null
+                                  ? 'Add Photographer (Optional)'
+                                  : '📷 ${_selectedPhotographer!.name}',
+                            ),
+                          ),
+                        ),
+                        if (_selectedPhotographer != null) ...[
+                          const SizedBox(width: 8),
+                          IconButton(
+                            onPressed: () => setState(() => _selectedPhotographer = null),
+                            icon: const Icon(Icons.close, size: 18),
+                            tooltip: 'Remove photographer',
+                          ),
+                        ],
+                      ],
+                    ),
+                    if (_selectedPhotographer != null) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        'Photographer cost: PKR ${_selectedPhotographer!.pricePerDay.toStringAsFixed(0)}/day',
+                        style: TextStyle(color: Colors.purple.shade700, fontWeight: FontWeight.w500),
+                      ),
+                    ],
                     const SizedBox(height: 16),
                     FilledButton(
                       onPressed: _submitting ? null : _bookHall,
-                      child: Text(
-                        _submitting ? 'Submitting...' : 'Request booking',
-                      ),
+                      child: Text(_submitting ? 'Submitting...' : 'Request booking'),
                     ),
                   ],
                 ),
@@ -2979,11 +2740,7 @@ class _HallDetailPageState extends State<HallDetailPage> {
     );
   }
 
-  Widget _detailBadge(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-  }) {
+  Widget _detailBadge(BuildContext context, {required IconData icon, required String label}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
@@ -2996,24 +2753,18 @@ class _HallDetailPageState extends State<HallDetailPage> {
         children: [
           Icon(icon, size: 16, color: Colors.white),
           const SizedBox(width: 6),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-          ),
+          Text(label,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  )),
         ],
       ),
     );
   }
 
-  Widget _infoPanel(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String value,
-  }) {
+  Widget _infoPanel(BuildContext context,
+      {required IconData icon, required String title, required String value}) {
     return Container(
       width: 260,
       padding: const EdgeInsets.all(16),
@@ -3040,21 +2791,15 @@ class _HallDetailPageState extends State<HallDetailPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: Colors.white70,
-                      ),
-                ),
+                Text(title,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Colors.white70)),
                 const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        height: 1.35,
-                      ),
-                ),
+                Text(value,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          height: 1.35,
+                        )),
               ],
             ),
           ),
@@ -3064,9 +2809,12 @@ class _HallDetailPageState extends State<HallDetailPage> {
   }
 }
 
+// ═══════════════════════════════════════════════════
+//  MY BOOKINGS PAGE  — JazzCash Pay button added
+// ═══════════════════════════════════════════════════
+
 class MyBookingsPage extends StatefulWidget {
   final Map<String, dynamic> user;
-
   const MyBookingsPage({super.key, required this.user});
 
   @override
@@ -3075,8 +2823,7 @@ class MyBookingsPage extends StatefulWidget {
 
 class _MyBookingsPageState extends State<MyBookingsPage> {
   late Future<List<dynamic>> _bookingsFuture;
-  final TextEditingController _bookingSearchController =
-      TextEditingController();
+  final TextEditingController _bookingSearchController = TextEditingController();
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   String _bookingFilter = 'All';
@@ -3107,9 +2854,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
   }
 
   Future<void> _refreshSilently() async {
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
     setState(() {
       _bookingsFuture = api.getMyBookings(widget.user['id'] as int);
     });
@@ -3146,20 +2891,16 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
       final eventType = booking['event_type']?.toString() ?? 'Event';
       final bookingDate = booking['booking_date']?.toString() ?? '';
       final guestCount = booking['guest_count']?.toString() ?? '';
-
       final title = '$eventType at $hallName';
       final description =
           'Event: $eventType\nHall: $hallName\nGuests: $guestCount\nDate: $bookingDate';
-
       await CalendarService.addBookingToCalendar(
         title: title,
         description: description,
         startDate: DateTime.tryParse(bookingDate) ?? DateTime.now(),
-        endDate: (DateTime.tryParse(bookingDate) ?? DateTime.now())
-            .add(const Duration(days: 1)),
+        endDate: (DateTime.tryParse(bookingDate) ?? DateTime.now()).add(const Duration(days: 1)),
         location: hallName,
       );
-
       if (!mounted) return;
       showAppSnackBar(context, AppLocalizations.of(context)!.addedToCalendar);
     } catch (error) {
@@ -3202,9 +2943,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
 
   List<Map<String, dynamic>> _filteredBookings(List<dynamic> rawBookings) {
     final query = _bookingSearchController.text.trim().toLowerCase();
-    final normalizedStatusFilter =
-        customerBookingStatusFilters[_bookingFilter] ?? '';
-
+    final normalizedStatusFilter = customerBookingStatusFilters[_bookingFilter] ?? '';
     final filtered = rawBookings
         .map((item) => Map<String, dynamic>.from(item as Map))
         .where((booking) {
@@ -3213,10 +2952,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
       final eventType = booking['event_type']?.toString().toLowerCase() ?? '';
       final bookingDate = booking['booking_date']?.toString().toLowerCase() ?? '';
       final guestCount = booking['guest_count']?.toString().toLowerCase() ?? '';
-
-      final statusMatches = normalizedStatusFilter.isEmpty
-          ? true
-          : status == normalizedStatusFilter;
+      final statusMatches = normalizedStatusFilter.isEmpty ? true : status == normalizedStatusFilter;
       final queryMatches = query.isEmpty ||
           hall.contains(query) ||
           eventType.contains(query) ||
@@ -3229,11 +2965,9 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
     filtered.sort((a, b) {
       switch (_bookingSortBy) {
         case 'newest':
-          return (b['created_at']?.toString() ?? '')
-              .compareTo(a['created_at']?.toString() ?? '');
+          return (b['created_at']?.toString() ?? '').compareTo(a['created_at']?.toString() ?? '');
         case 'oldest':
-          return (a['created_at']?.toString() ?? '')
-              .compareTo(b['created_at']?.toString() ?? '');
+          return (a['created_at']?.toString() ?? '').compareTo(b['created_at']?.toString() ?? '');
         case 'hall':
           return (a['hall_name']?.toString().toLowerCase() ?? '')
               .compareTo(b['hall_name']?.toString().toLowerCase() ?? '');
@@ -3250,7 +2984,6 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
               .compareTo(b['booking_date']?.toString() ?? '');
       }
     });
-
     return filtered;
   }
 
@@ -3265,26 +2998,11 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
 
   String? _bookingFilterSummary() {
     final parts = <String>[];
-    final query = _bookingSearchController.text.trim();
-    if (query.isNotEmpty) {
-      parts.add('Search: $query');
-    }
-    if (_bookingFilter != 'All') {
-      parts.add('Status: $_bookingFilter');
-    }
-    if (_bookingSortBy != 'event_date') {
-      parts.add(
-        'Sort: ${customerBookingSortOptions[_bookingSortBy] ?? _bookingSortBy}',
-      );
-    }
-    if (_selectedDay != null) {
-      parts.add(
-        'Day: ${DateFormat('yyyy-MM-dd').format(_selectedDay!)}',
-      );
-    }
-    if (parts.isEmpty) {
-      return null;
-    }
+    if (_bookingSearchController.text.trim().isNotEmpty) parts.add('Search: ${_bookingSearchController.text.trim()}');
+    if (_bookingFilter != 'All') parts.add('Status: $_bookingFilter');
+    if (_bookingSortBy != 'event_date') parts.add('Sort: ${customerBookingSortOptions[_bookingSortBy] ?? _bookingSortBy}');
+    if (_selectedDay != null) parts.add('Day: ${DateFormat('yyyy-MM-dd').format(_selectedDay!)}');
+    if (parts.isEmpty) return null;
     return parts.join('  •  ');
   }
 
@@ -3305,36 +3023,25 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
             }
             final bookings = snapshot.data ?? [];
             if (bookings.isEmpty) {
-              return ListView(
-                children: [
-                  const SizedBox(height: 220),
-                  Center(
-                      child: Text(AppLocalizations.of(context)!.noBookingsYet)),
-                ],
-              );
+              return ListView(children: [
+                const SizedBox(height: 220),
+                Center(child: Text(AppLocalizations.of(context)!.noBookingsYet)),
+              ]);
             }
             final filteredBookings = _filteredBookings(bookings);
             final eventsByDay = <DateTime, List<Map<String, dynamic>>>{};
             for (final item in filteredBookings) {
               final booking = Map<String, dynamic>.from(item as Map);
-              final parsedDate = DateTime.tryParse(
-                booking['booking_date']?.toString() ?? '',
-              );
+              final parsedDate = DateTime.tryParse(booking['booking_date']?.toString() ?? '');
               if (parsedDate == null) continue;
-              final dayKey =
-                  DateTime(parsedDate.year, parsedDate.month, parsedDate.day);
+              final dayKey = DateTime(parsedDate.year, parsedDate.month, parsedDate.day);
               eventsByDay.putIfAbsent(dayKey, () => []).add(booking);
             }
             final selectedDay = _selectedDay == null
                 ? null
-                : DateTime(
-                    _selectedDay!.year,
-                    _selectedDay!.month,
-                    _selectedDay!.day,
-                  );
-            final visibleBookings = selectedDay == null
-                ? filteredBookings
-                : eventsByDay[selectedDay] ?? const <Map<String, dynamic>>[];
+                : DateTime(_selectedDay!.year, _selectedDay!.month, _selectedDay!.day);
+            final visibleBookings =
+                selectedDay == null ? filteredBookings : eventsByDay[selectedDay] ?? const <Map<String, dynamic>>[];
             return ListView(
               padding: const EdgeInsets.all(16),
               children: [
@@ -3357,40 +3064,28 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                           spacing: 8,
                           runSpacing: 8,
                           children: customerBookingStatusFilters.keys
-                              .map(
-                                (filter) => ChoiceChip(
-                                  label: Text(filter),
-                                  selected: _bookingFilter == filter,
-                                  onSelected: (_) =>
-                                      setState(() => _bookingFilter = filter),
-                                ),
-                              )
+                              .map((filter) => ChoiceChip(
+                                    label: Text(filter),
+                                    selected: _bookingFilter == filter,
+                                    onSelected: (_) => setState(() => _bookingFilter = filter),
+                                  ))
                               .toList(),
                         ),
                         const SizedBox(height: 12),
                         DropdownButtonFormField<String>(
                           initialValue: _bookingSortBy,
                           items: customerBookingSortOptions.entries
-                              .map(
-                                (entry) => DropdownMenuItem(
-                                  value: entry.key,
-                                  child: Text(entry.value),
-                                ),
-                              )
+                              .map((entry) => DropdownMenuItem(value: entry.key, child: Text(entry.value)))
                               .toList(),
-                          onChanged: (value) => setState(
-                            () => _bookingSortBy = value ?? 'event_date',
-                          ),
+                          onChanged: (value) => setState(() => _bookingSortBy = value ?? 'event_date'),
                           decoration: const InputDecoration(labelText: 'Sort by'),
                         ),
                         if (_bookingFilterSummary() != null) ...[
                           const SizedBox(height: 12),
                           Align(
                             alignment: Alignment.centerLeft,
-                            child: Text(
-                              _bookingFilterSummary()!,
-                              style: TextStyle(color: Colors.grey.shade700),
-                            ),
+                            child: Text(_bookingFilterSummary()!,
+                                style: TextStyle(color: Colors.grey.shade700)),
                           ),
                         ],
                         const SizedBox(height: 12),
@@ -3414,8 +3109,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                       firstDay: DateTime.utc(2024, 1, 1),
                       lastDay: DateTime.utc(2035, 12, 31),
                       focusedDay: _focusedDay,
-                      selectedDayPredicate: (day) =>
-                          isSameDay(_selectedDay, day),
+                      selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
                       eventLoader: (day) =>
                           eventsByDay[DateTime(day.year, day.month, day.day)] ??
                           const <Map<String, dynamic>>[],
@@ -3466,123 +3160,189 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                     ),
                   )
                 else
-                ...visibleBookings.map((item) {
-                  final booking = Map<String, dynamic>.from(item as Map);
-                  final bookingId = bookingIdFromMap(booking);
-                  final isPending = booking['status'] == 'pending';
-                  final adjustedCostRaw = booking['adjusted_cost'];
-                  final adjustedCost = adjustedCostRaw is num
-                      ? adjustedCostRaw.toDouble()
-                      : double.tryParse(adjustedCostRaw?.toString() ?? '');
-                  final messages = ((booking['messages'] as List?) ?? const [])
-                      .map((item) => Map<String, dynamic>.from(item as Map))
-                      .toList();
-                  return Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            booking['hall_name']?.toString() ?? 'Hall',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            '${booking['booking_date']} | ${booking['event_type']} | ${booking['guest_count']} guests',
-                          ),
-                          if (adjustedCost != null)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                'Estimated total: Rs. ${adjustedCost.toStringAsFixed(0)}',
-                                style: TextStyle(color: Colors.grey.shade700),
+                  ...visibleBookings.map((item) {
+                    final booking = Map<String, dynamic>.from(item as Map);
+                    final bookingId = bookingIdFromMap(booking);
+                    final isPending = booking['status'] == 'pending';
+                    final isApproved = booking['status'] == 'approved';
+                    final paymentStatus = booking['payment_status']?.toString() ?? 'unpaid';
+                    final totalCost = (booking['total_cost'] as num?)?.toDouble() ?? 0.0;
+                    final adjustedCostRaw = booking['adjusted_cost'];
+                    final adjustedCost = adjustedCostRaw is num
+                        ? adjustedCostRaw.toDouble()
+                        : double.tryParse(adjustedCostRaw?.toString() ?? '');
+                    final messages = ((booking['messages'] as List?) ?? const [])
+                        .map((item) => Map<String, dynamic>.from(item as Map))
+                        .toList();
+
+                    // Photographer info
+                    final photographerInfo = booking['photographer'] as Map<String, dynamic>?;
+
+                    return Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(booking['hall_name']?.toString() ?? 'Hall',
+                                style: Theme.of(context).textTheme.titleMedium),
+                            const SizedBox(height: 6),
+                            Text('${booking['booking_date']} | ${booking['event_type']} | ${booking['guest_count']} guests'),
+                            if (adjustedCost != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Text('Estimated total: Rs. ${adjustedCost.toStringAsFixed(0)}',
+                                    style: TextStyle(color: Colors.grey.shade700)),
                               ),
-                            ),
-                          if ((booking['special_request']
-                                  ?.toString()
-                                  .isNotEmpty ??
-                              false))
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                "Request: ${booking['special_request']}",
-                                style: TextStyle(color: Colors.grey.shade700),
-                              ),
-                            ),
-                          if ((booking['additional_notes']
-                                  ?.toString()
-                                  .isNotEmpty ??
-                              false))
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                'Note: ${booking['additional_notes']}',
-                                style: TextStyle(color: Colors.grey.shade700),
-                              ),
-                            ),
-                          const SizedBox(height: 10),
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFFFFFF),
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Conversation',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleSmall
-                                      ?.copyWith(fontWeight: FontWeight.w700),
+                            // Photographer info display
+                            if (photographerInfo != null) ...[
+                              const SizedBox(height: 6),
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.purple.shade50,
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
-                                const SizedBox(height: 4),
-                                BookingMessagePreview(messages: messages),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.camera_alt_outlined, size: 16, color: Colors.purple),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '📷 ${photographerInfo['name']} — PKR ${photographerInfo['price_per_day']?.toString() ?? ''}/day',
+                                      style: const TextStyle(color: Colors.purple, fontSize: 12),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            if ((booking['special_request']?.toString().isNotEmpty ?? false))
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Text('Request: ${booking['special_request']}',
+                                    style: TextStyle(color: Colors.grey.shade700)),
+                              ),
+                            if ((booking['additional_notes']?.toString().isNotEmpty ?? false))
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Text('Note: ${booking['additional_notes']}',
+                                    style: TextStyle(color: Colors.grey.shade700)),
+                              ),
+                            const SizedBox(height: 10),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFFFFF),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Conversation',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleSmall
+                                          ?.copyWith(fontWeight: FontWeight.w700)),
+                                  const SizedBox(height: 4),
+                                  BookingMessagePreview(messages: messages),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            // ── JAZZCASH PAY BUTTON ──────────────────
+                            if (isApproved && paymentStatus == 'unpaid') ...[
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton.icon(
+                                  icon: const Icon(Icons.payment, color: Colors.white),
+                                  label: Text(
+                                    'Pay with JazzCash — Rs. ${totalCost.toStringAsFixed(0)}',
+                                    style: const TextStyle(
+                                        color: Colors.white, fontWeight: FontWeight.bold),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFFB6465F),
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10)),
+                                  ),
+                                  onPressed: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => JazzCashPaymentScreen(
+                                        bookingId: bookingId!,
+                                        totalAmount: totalCost,
+                                        hallName: booking['hall_name']?.toString() ?? '',
+                                        onPaymentSuccess: () {
+                                          showAppSnackBar(context, 'Payment successful! 🎉');
+                                          _refresh();
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                            ],
+                            // ── PAYMENT PAID badge ───────────────────
+                            if (paymentStatus == 'paid') ...[
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.shade50,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.green.shade200),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.check_circle, color: Colors.green),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Payment Done ✓ Ref: ${booking['payment_reference'] ?? ''}',
+                                      style: const TextStyle(
+                                          color: Colors.green, fontWeight: FontWeight.w600),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                            ],
+                            Row(
+                              children: [
+                                Chip(label: Text(booking['status']?.toString() ?? 'pending')),
+                                if (paymentStatus != 'paid' && paymentStatus != 'unpaid') ...[
+                                  const SizedBox(width: 8),
+                                  Chip(
+                                    label: Text(paymentStatus),
+                                    backgroundColor: paymentStatus == 'failed'
+                                        ? Colors.red.shade100
+                                        : Colors.grey.shade200,
+                                  ),
+                                ],
+                                const Spacer(),
+                                IconButton(
+                                  onPressed: () => _addToCalendar(booking),
+                                  icon: const Icon(Icons.calendar_today_outlined),
+                                  tooltip: AppLocalizations.of(context)!.addToCalendar,
+                                ),
+                                TextButton.icon(
+                                  onPressed: () => _openMessages(booking),
+                                  icon: const Icon(Icons.chat_bubble_outline),
+                                  label: Text(messages.isEmpty ? 'Messages' : 'Messages (${messages.length})'),
+                                ),
+                                if (isPending)
+                                  TextButton.icon(
+                                    onPressed: bookingId == null ? null : () => _cancelBooking(bookingId),
+                                    icon: const Icon(Icons.cancel_outlined),
+                                    label: Text(AppLocalizations.of(context)!.cancel),
+                                  ),
                               ],
                             ),
-                          ),
-                          const SizedBox(height: 10),
-                          Row(
-                            children: [
-                              Chip(
-                                label: Text(
-                                    booking['status']?.toString() ?? 'pending'),
-                              ),
-                              const Spacer(),
-                              IconButton(
-                                onPressed: () => _addToCalendar(booking),
-                                icon: const Icon(Icons.calendar_today_outlined),
-                                tooltip:
-                                    AppLocalizations.of(context)!.addToCalendar,
-                              ),
-                              TextButton.icon(
-                                onPressed: () => _openMessages(booking),
-                                icon: const Icon(Icons.chat_bubble_outline),
-                                label: Text(
-                                  messages.isEmpty
-                                      ? 'Messages'
-                                      : 'Messages (${messages.length})',
-                                ),
-                              ),
-                              if (isPending)
-                                TextButton.icon(
-                                  onPressed: bookingId == null
-                                      ? null
-                                      : () => _cancelBooking(bookingId),
-                                  icon: const Icon(Icons.cancel_outlined),
-                                  label: Text(
-                                      AppLocalizations.of(context)!.cancel),
-                                ),
-                            ],
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                }),
+                    );
+                  }),
               ],
             );
           },
@@ -3594,7 +3354,6 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
 
 class CustomerProfilePage extends StatefulWidget {
   final Map<String, dynamic> user;
-
   const CustomerProfilePage({super.key, required this.user});
 
   @override
@@ -3611,12 +3370,10 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
   @override
   void initState() {
     super.initState();
-    _nameController =
-        TextEditingController(text: widget.user['name']?.toString() ?? '');
-    _phoneController =
-        TextEditingController(text: widget.user['phone']?.toString() ?? '');
-    _profileImageController = TextEditingController(
-        text: widget.user['profile_image']?.toString() ?? '');
+    _nameController = TextEditingController(text: widget.user['name']?.toString() ?? '');
+    _phoneController = TextEditingController(text: widget.user['phone']?.toString() ?? '');
+    _profileImageController =
+        TextEditingController(text: widget.user['profile_image']?.toString() ?? '');
     _favoriteCategory = widget.user['favorite_category']?.toString() ?? 'Any';
   }
 
@@ -3655,29 +3412,25 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
         padding: const EdgeInsets.all(16),
         children: [
           TextField(
-            controller: _nameController,
-            decoration: const InputDecoration(labelText: 'Name'),
-          ),
+              controller: _nameController,
+              decoration: const InputDecoration(labelText: 'Name')),
           const SizedBox(height: 12),
           TextField(
-            controller: _phoneController,
-            decoration: const InputDecoration(labelText: 'Phone'),
-          ),
+              controller: _phoneController,
+              decoration: const InputDecoration(labelText: 'Phone')),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             initialValue: _favoriteCategory,
             items: const ['Any', 'Luxury', 'Outdoor', 'Indoor', 'Budget']
                 .map((item) => DropdownMenuItem(value: item, child: Text(item)))
                 .toList(),
-            onChanged: (value) =>
-                setState(() => _favoriteCategory = value ?? 'Any'),
+            onChanged: (value) => setState(() => _favoriteCategory = value ?? 'Any'),
             decoration: const InputDecoration(labelText: 'Preferred category'),
           ),
           const SizedBox(height: 12),
           TextField(
-            controller: _profileImageController,
-            decoration: const InputDecoration(labelText: 'Profile image URL'),
-          ),
+              controller: _profileImageController,
+              decoration: const InputDecoration(labelText: 'Profile image URL')),
           const SizedBox(height: 18),
           FilledButton(
             onPressed: _saving ? null : _save,
@@ -3700,8 +3453,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
   late Future<Map<String, dynamic>> _statsFuture;
   late Future<List<dynamic>> _bookingsFuture;
   late Future<List<dynamic>> _customersFuture;
-  final TextEditingController _bookingSearchController =
-      TextEditingController();
+  final TextEditingController _bookingSearchController = TextEditingController();
   String _bookingFilter = 'All';
   String _bookingSortBy = 'newest';
   Timer? _autoRefreshTimer;
@@ -3730,9 +3482,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
   }
 
   void _refreshSilently() {
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
     setState(_reload);
   }
 
@@ -3789,10 +3539,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         viewerRole: 'admin',
         loadMessages: () => _loadBookingMessages(bookingId),
         onSend: (message) async {
-          await api.sendBookingMessage(
-            bookingId,
-            message,
-          );
+          await api.sendBookingMessage(bookingId, message);
         },
       ),
     );
@@ -3803,13 +3550,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
   }
 
   Future<void> _openManageHalls() async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const ManageHallsPage()),
-    );
-    if (mounted) {
-      setState(_reload);
-    }
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageHallsPage()));
+    if (mounted) setState(_reload);
   }
 
   List<Map<String, dynamic>> _filteredBookings(List<dynamic> rawBookings) {
@@ -3822,14 +3564,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
       final hall = booking['hall_name']?.toString().toLowerCase() ?? '';
       final customer = booking['customer_name']?.toString().toLowerCase() ?? '';
       final eventType = booking['event_type']?.toString().toLowerCase() ?? '';
-      final customerEmail =
-          booking['customer_email']?.toString().toLowerCase() ?? '';
+      final customerEmail = booking['customer_email']?.toString().toLowerCase() ?? '';
       final bookingDate = booking['booking_date']?.toString().toLowerCase() ?? '';
       final guestCount = booking['guest_count']?.toString().toLowerCase() ?? '';
-
-      final statusMatches = normalizedStatusFilter.isEmpty
-          ? true
-          : status == normalizedStatusFilter;
+      final statusMatches =
+          normalizedStatusFilter.isEmpty ? true : status == normalizedStatusFilter;
       final queryMatches = query.isEmpty ||
           hall.contains(query) ||
           customer.contains(query) ||
@@ -3844,11 +3583,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
     filtered.sort((a, b) {
       switch (_bookingSortBy) {
         case 'oldest':
-          return (a['created_at']?.toString() ?? '')
-              .compareTo(b['created_at']?.toString() ?? '');
+          return (a['created_at']?.toString() ?? '').compareTo(b['created_at']?.toString() ?? '');
         case 'event_date':
-          return (a['booking_date']?.toString() ?? '')
-              .compareTo(b['booking_date']?.toString() ?? '');
+          return (a['booking_date']?.toString() ?? '').compareTo(b['booking_date']?.toString() ?? '');
         case 'hall':
           return (a['hall_name']?.toString().toLowerCase() ?? '')
               .compareTo(b['hall_name']?.toString().toLowerCase() ?? '');
@@ -3856,21 +3593,17 @@ class _AdminDashboardState extends State<AdminDashboard> {
           return (a['customer_name']?.toString().toLowerCase() ?? '')
               .compareTo(b['customer_name']?.toString().toLowerCase() ?? '');
         case 'guest_count':
-          final aGuests =
-              int.tryParse(a['guest_count']?.toString() ?? '') ?? 0;
-          final bGuests =
-              int.tryParse(b['guest_count']?.toString() ?? '') ?? 0;
+          final aGuests = int.tryParse(a['guest_count']?.toString() ?? '') ?? 0;
+          final bGuests = int.tryParse(b['guest_count']?.toString() ?? '') ?? 0;
           return bGuests.compareTo(aGuests);
         case 'status':
           return (a['status']?.toString().toLowerCase() ?? '')
               .compareTo(b['status']?.toString().toLowerCase() ?? '');
         case 'newest':
         default:
-          return (b['created_at']?.toString() ?? '')
-              .compareTo(a['created_at']?.toString() ?? '');
+          return (b['created_at']?.toString() ?? '').compareTo(a['created_at']?.toString() ?? '');
       }
     });
-
     return filtered;
   }
 
@@ -3884,21 +3617,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   String? _bookingFilterSummary() {
     final parts = <String>[];
-    final query = _bookingSearchController.text.trim();
-    if (query.isNotEmpty) {
-      parts.add('Search: $query');
-    }
-    if (_bookingFilter != 'All') {
-      parts.add('Status: $_bookingFilter');
-    }
-    if (_bookingSortBy != 'newest') {
-      parts.add(
-        'Sort: ${adminBookingSortOptions[_bookingSortBy] ?? _bookingSortBy}',
-      );
-    }
-    if (parts.isEmpty) {
-      return null;
-    }
+    if (_bookingSearchController.text.trim().isNotEmpty) parts.add('Search: ${_bookingSearchController.text.trim()}');
+    if (_bookingFilter != 'All') parts.add('Status: $_bookingFilter');
+    if (_bookingSortBy != 'newest') parts.add('Sort: ${adminBookingSortOptions[_bookingSortBy] ?? _bookingSortBy}');
+    if (parts.isEmpty) return null;
     return parts.join('  •  ');
   }
 
@@ -3906,14 +3628,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Admin Command Center'), actions: [
-        IconButton(
-          onPressed: () => setState(_reload),
-          icon: const Icon(Icons.refresh),
-        ),
-        IconButton(
-          onPressed: _openManageHalls,
-          icon: const Icon(Icons.store_mall_directory),
-        ),
+        IconButton(onPressed: () => setState(_reload), icon: const Icon(Icons.refresh)),
+        IconButton(onPressed: _openManageHalls, icon: const Icon(Icons.store_mall_directory)),
         IconButton(onPressed: _logout, icon: const Icon(Icons.logout)),
       ]),
       body: RefreshIndicator(
@@ -3932,15 +3648,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(28),
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF1F2937), Color(0xFF7C2D47)],
-                        ),
+                        gradient: const LinearGradient(colors: [Color(0xFF1F2937), Color(0xFF7C2D47)]),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.08),
-                            blurRadius: 22,
-                            offset: const Offset(0, 14),
-                          ),
+                              color: Colors.black.withValues(alpha: 0.08),
+                              blurRadius: 22,
+                              offset: const Offset(0, 14))
                         ],
                       ),
                       child: Column(
@@ -3951,38 +3664,22 @@ class _AdminDashboardState extends State<AdminDashboard> {
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.14),
-                                  borderRadius: BorderRadius.circular(18),
-                                ),
-                                child: const Icon(
-                                  Icons.dashboard_customize_outlined,
-                                  color: Colors.white,
-                                ),
+                                    color: Colors.white.withValues(alpha: 0.14),
+                                    borderRadius: BorderRadius.circular(18)),
+                                child: const Icon(Icons.dashboard_customize_outlined, color: Colors.white),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      'Operations Snapshot',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .headlineSmall
-                                          ?.copyWith(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                    ),
+                                    Text('Operations Snapshot',
+                                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                            color: Colors.white, fontWeight: FontWeight.w700)),
                                     const SizedBox(height: 4),
                                     Text(
-                                      'Manage halls, triage booking requests, and track customer activity in one place.',
-                                      style: TextStyle(
-                                        color: Colors.white.withValues(
-                                          alpha: 0.84,
-                                        ),
-                                      ),
-                                    ),
+                                        'Manage halls, triage booking requests, and track customer activity in one place.',
+                                        style: TextStyle(color: Colors.white.withValues(alpha: 0.84))),
                                   ],
                                 ),
                               ),
@@ -3994,26 +3691,16 @@ class _AdminDashboardState extends State<AdminDashboard> {
                             runSpacing: 12,
                             children: [
                               _DashboardMetricCard(
-                                label: 'Total halls',
-                                value: '${stats['total_halls'] ?? 0}',
-                                icon: Icons.apartment_outlined,
-                              ),
+                                  label: 'Total halls', value: '${stats['total_halls'] ?? 0}', icon: Icons.apartment_outlined),
                               _DashboardMetricCard(
-                                label: 'Customers',
-                                value: '${stats['total_customers'] ?? 0}',
-                                icon: Icons.groups_2_outlined,
-                              ),
+                                  label: 'Customers', value: '${stats['total_customers'] ?? 0}', icon: Icons.groups_2_outlined),
                               _DashboardMetricCard(
-                                label: 'All bookings',
-                                value: '${stats['total_bookings'] ?? 0}',
-                                icon: Icons.event_note_outlined,
-                              ),
+                                  label: 'All bookings', value: '${stats['total_bookings'] ?? 0}', icon: Icons.event_note_outlined),
                               _DashboardMetricCard(
-                                label: 'Pending review',
-                                value: '${stats['pending_bookings'] ?? 0}',
-                                icon: Icons.pending_actions_outlined,
-                                highlight: true,
-                              ),
+                                  label: 'Pending review',
+                                  value: '${stats['pending_bookings'] ?? 0}',
+                                  icon: Icons.pending_actions_outlined,
+                                  highlight: true),
                             ],
                           ),
                           const SizedBox(height: 18),
@@ -4022,15 +3709,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
                             runSpacing: 10,
                             children: [
                               FilledButton.icon(
-                                onPressed: _openManageHalls,
-                                icon: const Icon(Icons.storefront_outlined),
-                                label: const Text('Manage halls'),
-                              ),
+                                  onPressed: _openManageHalls,
+                                  icon: const Icon(Icons.storefront_outlined),
+                                  label: const Text('Manage halls')),
                               FilledButton.tonalIcon(
-                                onPressed: () => setState(_reload),
-                                icon: const Icon(Icons.sync_outlined),
-                                label: const Text('Refresh data'),
-                              ),
+                                  onPressed: () => setState(_reload),
+                                  icon: const Icon(Icons.sync_outlined),
+                                  label: const Text('Refresh data')),
                             ],
                           ),
                         ],
@@ -4042,10 +3727,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
               },
             ),
             const _AdminSectionHeader(
-              title: 'Booking Queue',
-              subtitle:
-                  'Prioritize pending approvals and search by hall, customer, or event.',
-            ),
+                title: 'Booking Queue',
+                subtitle: 'Prioritize pending approvals and search by hall, customer, or event.'),
             const SizedBox(height: 12),
             Card(
               child: Padding(
@@ -4057,8 +3740,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       decoration: const InputDecoration(
                         prefixIcon: Icon(Icons.search),
                         labelText: 'Search bookings',
-                        hintText:
-                            'Search by hall, customer, email, date, status...',
+                        hintText: 'Search by hall, customer, email, date, status...',
                       ),
                       onChanged: (_) => setState(() {}),
                     ),
@@ -4067,40 +3749,27 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       spacing: 8,
                       runSpacing: 8,
                       children: adminBookingStatusFilters.keys
-                          .map(
-                            (filter) => ChoiceChip(
-                              label: Text(filter),
-                              selected: _bookingFilter == filter,
-                              onSelected: (_) =>
-                                  setState(() => _bookingFilter = filter),
-                            ),
-                          )
+                          .map((filter) => ChoiceChip(
+                                label: Text(filter),
+                                selected: _bookingFilter == filter,
+                                onSelected: (_) => setState(() => _bookingFilter = filter),
+                              ))
                           .toList(),
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
                       initialValue: _bookingSortBy,
                       items: adminBookingSortOptions.entries
-                          .map(
-                            (entry) => DropdownMenuItem(
-                              value: entry.key,
-                              child: Text(entry.value),
-                            ),
-                          )
+                          .map((entry) => DropdownMenuItem(value: entry.key, child: Text(entry.value)))
                           .toList(),
-                      onChanged: (value) => setState(
-                        () => _bookingSortBy = value ?? 'newest',
-                      ),
+                      onChanged: (value) => setState(() => _bookingSortBy = value ?? 'newest'),
                       decoration: const InputDecoration(labelText: 'Sort by'),
                     ),
                     if (_bookingFilterSummary() != null) ...[
                       const SizedBox(height: 12),
                       Align(
                         alignment: Alignment.centerLeft,
-                        child: Text(
-                          _bookingFilterSummary()!,
-                          style: TextStyle(color: Colors.grey.shade700),
-                        ),
+                        child: Text(_bookingFilterSummary()!, style: TextStyle(color: Colors.grey.shade700)),
                       ),
                     ],
                     const SizedBox(height: 12),
@@ -4122,21 +3791,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
               builder: (context, snapshot) {
                 if (snapshot.connectionState != ConnectionState.done) {
                   return const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(24),
-                      child: CircularProgressIndicator(),
-                    ),
-                  );
+                      child: Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator()));
                 }
                 final bookings = snapshot.data ?? [];
                 final filteredBookings = _filteredBookings(bookings);
-                final pendingCount = bookings.where((item) {
-                  final booking = Map<String, dynamic>.from(item as Map);
-                  return booking['status'] == 'pending';
-                }).length;
-                if (bookings.isEmpty) {
-                  return const Text('No bookings submitted yet.');
-                }
+                final pendingCount = bookings
+                    .where((item) => Map<String, dynamic>.from(item as Map)['status'] == 'pending')
+                    .length;
+                if (bookings.isEmpty) return const Text('No bookings submitted yet.');
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -4144,49 +3806,39 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       children: [
                         Expanded(
                           child: _MiniInsightCard(
-                            label: 'Visible bookings',
-                            value: '${filteredBookings.length}',
-                            color: const Color(0xFF7C2D47),
-                          ),
+                              label: 'Visible bookings',
+                              value: '${filteredBookings.length}',
+                              color: const Color(0xFF7C2D47)),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: _MiniInsightCard(
-                            label: 'Pending approvals',
-                            value: '$pendingCount',
-                            color: const Color(0xFF1F2937),
-                          ),
+                              label: 'Pending approvals',
+                              value: '$pendingCount',
+                              color: const Color(0xFF1F2937)),
                         ),
                       ],
                     ),
                     const SizedBox(height: 12),
                     if (filteredBookings.isEmpty)
                       const Card(
-                        child: Padding(
-                          padding: EdgeInsets.all(18),
-                          child: Text('No bookings match the current filter.'),
-                        ),
-                      )
+                          child: Padding(
+                              padding: EdgeInsets.all(18),
+                              child: Text('No bookings match the current filter.')))
                     else
                       ...filteredBookings.map((booking) {
-                        final status =
-                            booking['status']?.toString() ?? 'pending';
+                        final status = booking['status']?.toString() ?? 'pending';
                         final bookingId = bookingIdFromMap(booking);
                         final isPending = status == 'pending';
-                        final messages =
-                            ((booking['messages'] as List?) ?? const [])
-                                .map((item) =>
-                                    Map<String, dynamic>.from(item as Map))
-                                .toList();
+                        final messages = ((booking['messages'] as List?) ?? const [])
+                            .map((item) => Map<String, dynamic>.from(item as Map))
+                            .toList();
                         return Card(
                           elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(22),
                             side: BorderSide(
-                              color: isPending
-                                  ? const Color(0xFF7C2D47)
-                                  : Colors.grey.shade200,
-                            ),
+                                color: isPending ? const Color(0xFF7C2D47) : Colors.grey.shade200),
                           ),
                           child: Padding(
                             padding: const EdgeInsets.all(16),
@@ -4198,63 +3850,39 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                   children: [
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Text(
-                                            booking['hall_name']?.toString() ??
-                                                'Hall',
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleLarge,
-                                          ),
+                                          Text(booking['hall_name']?.toString() ?? 'Hall',
+                                              style: Theme.of(context).textTheme.titleLarge),
                                           const SizedBox(height: 6),
-                                          Text(
-                                            '${booking['customer_name']} | ${booking['booking_date']}',
-                                          ),
-                                          Text(
-                                            '${booking['event_type']} | ${booking['guest_count']} guests',
-                                          ),
+                                          Text('${booking['customer_name']} | ${booking['booking_date']}'),
+                                          Text('${booking['event_type']} | ${booking['guest_count']} guests'),
                                         ],
                                       ),
                                     ),
                                     _StatusBadge(status: status),
                                   ],
                                 ),
-                                if ((booking['special_request']
-                                        ?.toString()
-                                        .trim()
-                                        .isNotEmpty ??
-                                    false))
+                                if ((booking['special_request']?.toString().trim().isNotEmpty ?? false))
                                   Padding(
                                     padding: const EdgeInsets.only(top: 10),
                                     child: Container(
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFFFFFFFF),
-                                        borderRadius: BorderRadius.circular(14),
-                                      ),
-                                      child: Text(
-                                        'Special request: ${booking['special_request']}',
-                                      ),
+                                          color: const Color(0xFFFFFFFF),
+                                          borderRadius: BorderRadius.circular(14)),
+                                      child: Text('Special request: ${booking['special_request']}'),
                                     ),
                                   ),
-                                if ((booking['additional_notes']
-                                        ?.toString()
-                                        .trim()
-                                        .isNotEmpty ??
-                                    false))
+                                if ((booking['additional_notes']?.toString().trim().isNotEmpty ?? false))
                                   Padding(
                                     padding: const EdgeInsets.only(top: 10),
                                     child: Container(
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFFECECEC),
-                                        borderRadius: BorderRadius.circular(14),
-                                      ),
-                                      child: Text(
-                                        "Notes: ${booking['additional_notes']}",
-                                      ),
+                                          color: const Color(0xFFECECEC),
+                                          borderRadius: BorderRadius.circular(14)),
+                                      child: Text("Notes: ${booking['additional_notes']}"),
                                     ),
                                   ),
                                 const SizedBox(height: 10),
@@ -4262,22 +3890,16 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                   width: double.infinity,
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFECECEC),
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
+                                      color: const Color(0xFFECECEC),
+                                      borderRadius: BorderRadius.circular(14)),
                                   child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        'Conversation',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleSmall
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                      ),
+                                      Text('Conversation',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleSmall
+                                              ?.copyWith(fontWeight: FontWeight.w700)),
                                       const SizedBox(height: 4),
                                       BookingMessagePreview(messages: messages),
                                     ],
@@ -4289,33 +3911,22 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                   runSpacing: 10,
                                   children: [
                                     FilledButton(
-                                      onPressed: isPending
-                                          && bookingId != null
-                                          ? () => _updateStatus(
-                                                bookingId,
-                                                'approved',
-                                              )
+                                      onPressed: isPending && bookingId != null
+                                          ? () => _updateStatus(bookingId, 'approved')
                                           : null,
                                       child: const Text('Approve'),
                                     ),
                                     FilledButton.tonal(
-                                      onPressed: isPending
-                                          && bookingId != null
-                                          ? () => _updateStatus(
-                                                bookingId,
-                                                'rejected',
-                                              )
+                                      onPressed: isPending && bookingId != null
+                                          ? () => _updateStatus(bookingId, 'rejected')
                                           : null,
                                       child: const Text('Reject'),
                                     ),
                                     FilledButton.tonal(
-                                      onPressed: () =>
-                                          _showSendMessageDialog(booking),
-                                      child: Text(
-                                        messages.isEmpty
-                                            ? 'Message'
-                                            : 'Message (${messages.length})',
-                                      ),
+                                      onPressed: () => _showSendMessageDialog(booking),
+                                      child: Text(messages.isEmpty
+                                          ? 'Message'
+                                          : 'Message (${messages.length})'),
                                     ),
                                   ],
                                 ),
@@ -4330,10 +3941,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
             ),
             const SizedBox(height: 24),
             const _AdminSectionHeader(
-              title: 'Customer Intelligence',
-              subtitle:
-                  'See who registered recently and which categories they prefer.',
-            ),
+                title: 'Customer Intelligence',
+                subtitle: 'See who registered recently and which categories they prefer.'),
             const SizedBox(height: 12),
             FutureBuilder<List<dynamic>>(
               future: _customersFuture,
@@ -4342,19 +3951,15 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 final customers = snapshot.data ?? [];
-                final customerMaps = customers
-                    .map((item) => Map<String, dynamic>.from(item as Map))
-                    .toList();
+                final customerMaps =
+                    customers.map((item) => Map<String, dynamic>.from(item as Map)).toList();
                 final categoryCounts = <String, int>{};
                 for (final customer in customerMaps) {
-                  final category =
-                      customer['favorite_category']?.toString() ?? 'Any';
-                  categoryCounts[category] =
-                      (categoryCounts[category] ?? 0) + 1;
+                  final category = customer['favorite_category']?.toString() ?? 'Any';
+                  categoryCounts[category] = (categoryCounts[category] ?? 0) + 1;
                 }
                 final rankedCategories = categoryCounts.entries.toList()
                   ..sort((a, b) => b.value.compareTo(a.value));
-
                 return Column(
                   children: [
                     Card(
@@ -4363,10 +3968,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Preference trends',
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
+                            Text('Preference trends', style: Theme.of(context).textTheme.titleMedium),
                             const SizedBox(height: 12),
                             Wrap(
                               spacing: 10,
@@ -4375,13 +3977,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                   ? [const Chip(label: Text('No data yet'))]
                                   : rankedCategories
                                       .take(5)
-                                      .map(
-                                        (entry) => Chip(
-                                          label: Text(
-                                            '${entry.key}: ${entry.value}',
-                                          ),
-                                        ),
-                                      )
+                                      .map((entry) => Chip(label: Text('${entry.key}: ${entry.value}')))
                                       .toList(),
                             ),
                           ],
@@ -4390,36 +3986,23 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     ),
                     const SizedBox(height: 12),
                     ...customerMaps.take(8).map((customer) {
-                      final profileImage =
-                          customer['profile_image']?.toString() ?? '';
+                      final profileImage = customer['profile_image']?.toString() ?? '';
                       return Card(
                         child: ListTile(
                           leading: CircleAvatar(
-                            backgroundImage: profileImage.isNotEmpty
-                                ? NetworkImage(profileImage)
-                                : null,
-                            child: profileImage.isEmpty
-                                ? const Icon(Icons.person_outline)
-                                : null,
+                            backgroundImage:
+                                profileImage.isNotEmpty ? NetworkImage(profileImage) : null,
+                            child: profileImage.isEmpty ? const Icon(Icons.person_outline) : null,
                           ),
                           title: Text(customer['name']?.toString() ?? ''),
-                          subtitle: Text(
-                            '${customer['email'] ?? ''}\n${customer['phone'] ?? ''}',
-                          ),
+                          subtitle: Text('${customer['email'] ?? ''}\n${customer['phone'] ?? ''}'),
                           isThreeLine: true,
                           trailing: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 8,
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFECECEC),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              customer['favorite_category']?.toString() ??
-                                  'Any',
-                            ),
+                                color: const Color(0xFFECECEC),
+                                borderRadius: BorderRadius.circular(12)),
+                            child: Text(customer['favorite_category']?.toString() ?? 'Any'),
                           ),
                         ),
                       );
@@ -4451,27 +4034,17 @@ class _ManageHallsPageState extends State<ManageHallsPage> {
     _hallsFuture = api.getHalls();
   }
 
-  void _refresh() {
-    setState(() => _hallsFuture = api.getHalls());
-  }
+  void _refresh() => setState(() => _hallsFuture = api.getHalls());
 
   Future<void> _showHallForm([Map<String, dynamic>? hall]) async {
-    final nameController =
-        TextEditingController(text: hall?['name']?.toString() ?? '');
-    final locationController =
-        TextEditingController(text: hall?['location']?.toString() ?? '');
-    final capacityController =
-        TextEditingController(text: hall?['capacity']?.toString() ?? '');
-    final rentController =
-        TextEditingController(text: hall?['rent']?.toString() ?? '');
-    final contactController =
-        TextEditingController(text: hall?['contact_person']?.toString() ?? '');
-    final phoneController =
-        TextEditingController(text: hall?['phone_number']?.toString() ?? '');
-    final emailController =
-        TextEditingController(text: hall?['email']?.toString() ?? '');
-    final descriptionController =
-        TextEditingController(text: hall?['description']?.toString() ?? '');
+    final nameController = TextEditingController(text: hall?['name']?.toString() ?? '');
+    final locationController = TextEditingController(text: hall?['location']?.toString() ?? '');
+    final capacityController = TextEditingController(text: hall?['capacity']?.toString() ?? '');
+    final rentController = TextEditingController(text: hall?['rent']?.toString() ?? '');
+    final contactController = TextEditingController(text: hall?['contact_person']?.toString() ?? '');
+    final phoneController = TextEditingController(text: hall?['phone_number']?.toString() ?? '');
+    final emailController = TextEditingController(text: hall?['email']?.toString() ?? '');
+    final descriptionController = TextEditingController(text: hall?['description']?.toString() ?? '');
     final imageUrlsController = TextEditingController(
       text: (hall?['image_urls'] as List<dynamic>? ?? const [])
           .map((item) => item.toString())
@@ -4490,40 +4063,14 @@ class _ManageHallsPageState extends State<ManageHallsPage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  TextField(
-                    controller: nameController,
-                    decoration: const InputDecoration(labelText: 'Name'),
-                  ),
-                  TextField(
-                    controller: locationController,
-                    decoration: const InputDecoration(labelText: 'Location'),
-                  ),
-                  TextField(
-                    controller: capacityController,
-                    decoration: const InputDecoration(labelText: 'Capacity'),
-                  ),
-                  TextField(
-                    controller: rentController,
-                    decoration: const InputDecoration(labelText: 'Rent'),
-                  ),
-                  TextField(
-                    controller: contactController,
-                    decoration:
-                        const InputDecoration(labelText: 'Contact person'),
-                  ),
-                  TextField(
-                    controller: phoneController,
-                    decoration: const InputDecoration(labelText: 'Phone'),
-                  ),
-                  TextField(
-                    controller: emailController,
-                    decoration: const InputDecoration(labelText: 'Email'),
-                  ),
-                  TextField(
-                    controller: descriptionController,
-                    maxLines: 3,
-                    decoration: const InputDecoration(labelText: 'Description'),
-                  ),
+                  TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Name')),
+                  TextField(controller: locationController, decoration: const InputDecoration(labelText: 'Location')),
+                  TextField(controller: capacityController, decoration: const InputDecoration(labelText: 'Capacity')),
+                  TextField(controller: rentController, decoration: const InputDecoration(labelText: 'Rent')),
+                  TextField(controller: contactController, decoration: const InputDecoration(labelText: 'Contact person')),
+                  TextField(controller: phoneController, decoration: const InputDecoration(labelText: 'Phone')),
+                  TextField(controller: emailController, decoration: const InputDecoration(labelText: 'Email')),
+                  TextField(controller: descriptionController, maxLines: 3, decoration: const InputDecoration(labelText: 'Description')),
                   TextField(
                     controller: imageUrlsController,
                     maxLines: 2,
@@ -4536,34 +4083,27 @@ class _ManageHallsPageState extends State<ManageHallsPage> {
                     initialValue: category,
                     items: hallCategories
                         .where((item) => item != 'All')
-                        .map((item) =>
-                            DropdownMenuItem(value: item, child: Text(item)))
+                        .map((item) => DropdownMenuItem(value: item, child: Text(item)))
                         .toList(),
-                    onChanged: (value) =>
-                        setDialogState(() => category = value ?? 'Indoor'),
+                    onChanged: (value) => setDialogState(() => category = value ?? 'Indoor'),
                     decoration: const InputDecoration(labelText: 'Category'),
                   ),
                   SwitchListTile(
                     value: isFeatured,
                     title: const Text('Featured hall'),
-                    onChanged: (value) =>
-                        setDialogState(() => isFeatured = value),
+                    onChanged: (value) => setDialogState(() => isFeatured = value),
                   ),
                 ],
               ),
             ),
             actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
-              ),
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
               FilledButton(
                 onPressed: () async {
                   final payload = {
                     'name': nameController.text.trim(),
                     'location': locationController.text.trim(),
-                    'capacity':
-                        int.tryParse(capacityController.text.trim()) ?? 100,
+                    'capacity': int.tryParse(capacityController.text.trim()) ?? 100,
                     'rent': double.tryParse(rentController.text.trim()) ?? 0,
                     'contact_person': contactController.text.trim(),
                     'phone_number': phoneController.text.trim(),
@@ -4577,7 +4117,6 @@ class _ManageHallsPageState extends State<ManageHallsPage> {
                     'category': category,
                     'is_featured': isFeatured,
                   };
-
                   try {
                     if (hall == null) {
                       await api.addHall(payload);
@@ -4636,12 +4175,7 @@ class _ManageHallsPageState extends State<ManageHallsPage> {
                 child: ListTile(
                   leading: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: buildHallImage(
-                      hallPrimaryImage(hall),
-                      height: 56,
-                      width: 56,
-                      fit: BoxFit.cover,
-                    ),
+                    child: buildHallImage(hallPrimaryImage(hall), height: 56, width: 56, fit: BoxFit.cover),
                   ),
                   title: Text(hall['name']?.toString() ?? ''),
                   subtitle: Text('${hall['location']} | Rs. ${hall['rent']}'),
@@ -4649,13 +4183,11 @@ class _ManageHallsPageState extends State<ManageHallsPage> {
                     spacing: 8,
                     children: [
                       IconButton(
-                        onPressed: () => _showHallForm(hall),
-                        icon: const Icon(Icons.edit_outlined),
-                      ),
+                          onPressed: () => _showHallForm(hall),
+                          icon: const Icon(Icons.edit_outlined)),
                       IconButton(
-                        onPressed: () => _deleteHall(hall['hall_id'] as int),
-                        icon: const Icon(Icons.delete_outline),
-                      ),
+                          onPressed: () => _deleteHall(hall['hall_id'] as int),
+                          icon: const Icon(Icons.delete_outline)),
                     ],
                   ),
                 ),
@@ -4690,12 +4222,7 @@ class HallPreviewCard extends StatelessWidget {
           children: [
             Stack(
               children: [
-                buildHallImage(
-                  imagePath,
-                  height: 220,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
+                buildHallImage(imagePath, height: 220, width: double.infinity, fit: BoxFit.cover),
                 Positioned.fill(
                   child: DecoratedBox(
                     decoration: BoxDecoration(
@@ -4725,39 +4252,28 @@ class HallPreviewCard extends StatelessWidget {
                           children: [
                             Text(
                               hall['name']?.toString() ?? '',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleLarge
-                                  ?.copyWith(
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w700,
                                   ),
                             ),
                             const SizedBox(height: 6),
-                            Text(
-                              '${hall['location']} | ${hall['category']}',
-                              style: const TextStyle(color: Colors.white70),
-                            ),
+                            Text('${hall['location']} | ${hall['category']}',
+                                style: const TextStyle(color: Colors.white70)),
                           ],
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 10,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.14),
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: Text(
-                          'Rs. ${hall['rent']}',
-                          style:
-                              Theme.of(context).textTheme.titleSmall?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                        ),
+                        child: Text('Rs. ${hall['rent']}',
+                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                )),
                       ),
                     ],
                   ),
@@ -4773,28 +4289,13 @@ class HallPreviewCard extends StatelessWidget {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      _previewChip(
-                        context,
-                        Icons.groups_2_outlined,
-                        '${hall['capacity']} guests',
-                      ),
-                      _previewChip(
-                        context,
-                        Icons.photo_library_outlined,
-                        '${gallery.length} photos',
-                      ),
+                      _previewChip(context, Icons.groups_2_outlined, '${hall['capacity']} guests'),
+                      _previewChip(context, Icons.photo_library_outlined, '${gallery.length} photos'),
                       if (hall['distance_km'] != null)
-                        _previewChip(
-                          context,
-                          Icons.near_me_outlined,
-                          '${hall['distance_km']} km away',
-                        ),
+                        _previewChip(context, Icons.near_me_outlined, '${hall['distance_km']} km away'),
                       if ((hall['feedback_count'] as num? ?? 0) > 0)
-                        _previewChip(
-                          context,
-                          Icons.star_rounded,
-                          '${hall['average_rating']} (${hall['feedback_count']})',
-                        ),
+                        _previewChip(context, Icons.star_rounded,
+                            '${hall['average_rating']} (${hall['feedback_count']})'),
                     ],
                   ),
                   const SizedBox(height: 10),
@@ -4806,12 +4307,7 @@ class HallPreviewCard extends StatelessWidget {
                       separatorBuilder: (_, __) => const SizedBox(width: 10),
                       itemBuilder: (context, index) => ClipRRect(
                         borderRadius: BorderRadius.circular(14),
-                        child: buildHallImage(
-                          gallery[index],
-                          height: 72,
-                          width: 96,
-                          fit: BoxFit.cover,
-                        ),
+                        child: buildHallImage(gallery[index], height: 72, width: 96, fit: BoxFit.cover),
                       ),
                     ),
                   ),
@@ -4824,11 +4320,7 @@ class HallPreviewCard extends StatelessWidget {
     );
   }
 
-  Widget _previewChip(
-    BuildContext context,
-    IconData icon,
-    String label,
-  ) {
+  Widget _previewChip(BuildContext context, IconData icon, String label) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
@@ -4840,12 +4332,8 @@ class HallPreviewCard extends StatelessWidget {
         children: [
           Icon(icon, size: 16, color: const Color(0xFF7C2D47)),
           const SizedBox(width: 6),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-          ),
+          Text(label,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -4921,13 +4409,11 @@ class _DashboardMetricCard extends StatelessWidget {
         children: [
           Icon(icon, color: Colors.white),
           const SizedBox(height: 18),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                ),
-          ),
+          Text(value,
+              style: Theme.of(context)
+                  .textTheme
+                  .headlineSmall
+                  ?.copyWith(color: Colors.white, fontWeight: FontWeight.w700)),
           const SizedBox(height: 4),
           Text(label, style: const TextStyle(color: Colors.white70)),
         ],
@@ -4940,10 +4426,7 @@ class _AdminSectionHeader extends StatelessWidget {
   final String title;
   final String subtitle;
 
-  const _AdminSectionHeader({
-    required this.title,
-    required this.subtitle,
-  });
+  const _AdminSectionHeader({required this.title, required this.subtitle});
 
   @override
   Widget build(BuildContext context) {
@@ -4963,32 +4446,23 @@ class _MiniInsightCard extends StatelessWidget {
   final String value;
   final Color color;
 
-  const _MiniInsightCard({
-    required this.label,
-    required this.value,
-    required this.color,
-  });
+  const _MiniInsightCard({required this.label, required this.value, required this.color});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        color: color,
-      ),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(18), color: color),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label, style: const TextStyle(color: Colors.white70)),
           const SizedBox(height: 8),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                ),
-          ),
+          Text(value,
+              style: Theme.of(context)
+                  .textTheme
+                  .headlineSmall
+                  ?.copyWith(color: Colors.white, fontWeight: FontWeight.w700)),
         ],
       ),
     );
@@ -5021,13 +4495,9 @@ class _StatusBadge extends StatelessWidget {
         background = const Color(0xFFECECEC);
         foreground = const Color(0xFF7C2D47);
     }
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(999),
-      ),
+      decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(999)),
       child: Text(
         status[0].toUpperCase() + status.substring(1),
         style: TextStyle(color: foreground, fontWeight: FontWeight.w600),
