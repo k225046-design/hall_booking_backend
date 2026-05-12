@@ -13,11 +13,17 @@ from sqlalchemy import or_, text
 from werkzeug.security import check_password_hash, generate_password_hash
 from dotenv import load_dotenv
 
-
 app = Flask(__name__)
 load_dotenv()
+
 CORS(app, resources={r"/*": {"origins": "*"}})
-app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres.bdgmhmoechjhgjdznven:16th%40august%7C2004@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres"
+
+# ─────────────────────────────────────────────
+#  DATABASE — pure SQLite (works locally AND on PythonAnywhere)
+# ─────────────────────────────────────────────
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "app.db")
+app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{DB_PATH}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
@@ -43,9 +49,8 @@ _FLUTTER_ASSETS_DIR = os.path.join(_BASE_DIR, "hall_booking_app", "assets")
 def app_assets(relpath: str):
     """
     Serve static files from the Flutter project's `assets/` directory.
-
     Example relpath:
-      images/halls/dream_garden/hall1.jpg
+        images/halls/dream_garden/hall1.jpg
     """
     if not os.path.isdir(_FLUTTER_ASSETS_DIR):
         return jsonify({"error": "Assets directory not found."}), 404
@@ -54,6 +59,7 @@ def app_assets(relpath: str):
 
 def utc_now() -> datetime:
     return datetime.now(UTC).replace(tzinfo=None)
+
 
 DEFAULT_MENUS = [
     # Pakistani Wedding Menu - Comprehensive Desi Menu
@@ -74,11 +80,8 @@ DEFAULT_MENUS = [
     {"hall_id": 1, "category": "Appetizers", "item_name": "Chicken Roll", "price_per_plate": Decimal("200"), "description": "Paratha roll with chicken", "is_vegetarian": False},
     {"hall_id": 1, "category": "Appetizers", "item_name": "Samosa", "price_per_plate": Decimal("80"), "description": "Spicy samosa", "is_vegetarian": False},
     {"hall_id": 1, "category": "Appetizers", "item_name": "Pakora", "price_per_plate": Decimal("150"), "description": "Vegetable fritters", "is_vegetarian": True},
-    # Add for other halls similarly (truncated for brevity)
     {"hall_id": 2, "category": "Biryani & Rice", "item_name": "Chicken Biryani", "price_per_plate": Decimal("400"), "description": "Lahore-style biryani", "is_vegetarian": False},
     {"hall_id": 3, "category": "Main Course", "item_name": "Chicken Karahi", "price_per_plate": Decimal("500"), "description": "Faisalabad special", "is_vegetarian": False},
-    # ... more items for all halls
-    # Expanding menu for all halls
     {"hall_id": 1, "category": "Desserts", "item_name": "Ras Malai", "price_per_plate": Decimal("100"), "description": "Soft cheese dumplings in sweetened milk", "is_vegetarian": True},
     {"hall_id": 1, "category": "Desserts", "item_name": "Gulab Jamun", "price_per_plate": Decimal("120"), "description": "Sweet milk dumplings in rose syrup", "is_vegetarian": True},
     {"hall_id": 1, "category": "Desserts", "item_name": "Kheer", "price_per_plate": Decimal("90"), "description": "Rice pudding with nuts", "is_vegetarian": True},
@@ -87,7 +90,6 @@ DEFAULT_MENUS = [
     {"hall_id": 1, "category": "Drinks", "item_name": "Mineral Water", "price_per_plate": Decimal("30"), "description": "Bottled water", "is_vegetarian": True},
     {"hall_id": 1, "category": "Salads", "item_name": "Kachumber Salad", "price_per_plate": Decimal("50"), "description": "Tomato, onion, cucumber salad", "is_vegetarian": True},
     {"hall_id": 1, "category": "Salads", "item_name": "Raita", "price_per_plate": Decimal("70"), "description": "Yogurt with cucumber", "is_vegetarian": True},
-    # Add similar items for halls 2-10
     {"hall_id": 2, "category": "Desserts", "item_name": "Ras Malai", "price_per_plate": Decimal("95"), "description": "Soft cheese dumplings in sweetened milk", "is_vegetarian": True},
     {"hall_id": 2, "category": "Desserts", "item_name": "Gulab Jamun", "price_per_plate": Decimal("115"), "description": "Sweet milk dumplings in rose syrup", "is_vegetarian": True},
     {"hall_id": 2, "category": "Drinks", "item_name": "Lassi", "price_per_plate": Decimal("75"), "description": "Yogurt drink with cardamom", "is_vegetarian": True},
@@ -107,7 +109,6 @@ DEFAULT_MENUS = [
     {"hall_id": 9, "category": "Drinks", "item_name": "Lassi", "price_per_plate": Decimal("80"), "description": "Yogurt drink with cardamom", "is_vegetarian": True},
     {"hall_id": 10, "category": "Desserts", "item_name": "Ras Malai", "price_per_plate": Decimal("115"), "description": "Soft cheese dumplings in sweetened milk", "is_vegetarian": True},
     {"hall_id": 10, "category": "Drinks", "item_name": "Lassi", "price_per_plate": Decimal("95"), "description": "Yogurt drink with cardamom", "is_vegetarian": True},
-    # Add more main courses for all halls
     {"hall_id": 4, "category": "Main Course", "item_name": "Chicken Karahi", "price_per_plate": Decimal("520"), "description": "Spicy chicken karahi", "is_vegetarian": False},
     {"hall_id": 5, "category": "Main Course", "item_name": "Chicken Karahi", "price_per_plate": Decimal("480"), "description": "Spicy chicken karahi", "is_vegetarian": False},
     {"hall_id": 6, "category": "Main Course", "item_name": "Chicken Karahi", "price_per_plate": Decimal("560"), "description": "Spicy chicken karahi", "is_vegetarian": False},
@@ -116,7 +117,6 @@ DEFAULT_MENUS = [
     {"hall_id": 9, "category": "Main Course", "item_name": "Chicken Karahi", "price_per_plate": Decimal("510"), "description": "Spicy chicken karahi", "is_vegetarian": False},
     {"hall_id": 10, "category": "Main Course", "item_name": "Chicken Karahi", "price_per_plate": Decimal("570"), "description": "Spicy chicken karahi", "is_vegetarian": False},
 ]
-
 
 DEFAULT_HALLS = [
     {
@@ -128,13 +128,11 @@ DEFAULT_HALLS = [
         "phone_number": "03001234567",
         "email": "royalorchid@example.com",
         "description": "Grand indoor venue with bridal lounge and stage lighting.",
-        "image_urls": json.dumps(
-            [
-                "assets/images/halls/royal_fort/hall1.jpg",
-                "assets/images/halls/royal_fort/hall2.jpg",
-                "assets/images/halls/royal_fort/hall3.jpg",
-            ]
-        ),
+        "image_urls": json.dumps([
+            "assets/images/halls/royal_fort/hall1.jpg",
+            "assets/images/halls/royal_fort/hall2.jpg",
+            "assets/images/halls/royal_fort/hall3.jpg",
+        ]),
         "category": "Luxury",
         "is_featured": True,
     },
@@ -147,13 +145,11 @@ DEFAULT_HALLS = [
         "phone_number": "03111222333",
         "email": "dreamgarden@example.com",
         "description": "Open-air garden hall suited for weddings and mehndi events.",
-        "image_urls": json.dumps(
-            [
-                "assets/images/halls/dream_garden/hall1.jpg",
-                "assets/images/halls/dream_garden/hall2.jpg",
-                "assets/images/halls/dream_garden/hall3.jpg",
-            ]
-        ),
+        "image_urls": json.dumps([
+            "assets/images/halls/dream_garden/hall1.jpg",
+            "assets/images/halls/dream_garden/hall2.jpg",
+            "assets/images/halls/dream_garden/hall3.jpg",
+        ]),
         "category": "Outdoor",
         "is_featured": True,
     },
@@ -166,13 +162,11 @@ DEFAULT_HALLS = [
         "phone_number": "03334445566",
         "email": "galaxyhall@example.com",
         "description": "Stylish wedding hall with ambient lighting, modern decor, and spacious dining.",
-        "image_urls": json.dumps(
-            [
-                "assets/images/halls/galaxy/hall1.jpg",
-                "assets/images/halls/galaxy/hall2.jpg",
-                "assets/images/halls/galaxy/hall3.jpg",
-            ]
-        ),
+        "image_urls": json.dumps([
+            "assets/images/halls/galaxy/hall1.jpg",
+            "assets/images/halls/galaxy/hall2.jpg",
+            "assets/images/halls/galaxy/hall3.jpg",
+        ]),
         "category": "Luxury",
         "is_featured": True,
     },
@@ -185,13 +179,11 @@ DEFAULT_HALLS = [
         "phone_number": "03219876543",
         "email": "pearlpalace@example.com",
         "description": "Modern banquet hall with valet parking and family suites.",
-        "image_urls": json.dumps(
-            [
-                "assets/images/halls/pearl_palace/hall1.jpg",
-                "assets/images/halls/pearl_palace/hall2.jpg",
-                "assets/images/halls/pearl_palace/hall3.jpg",
-            ]
-        ),
+        "image_urls": json.dumps([
+            "assets/images/halls/pearl_palace/hall1.jpg",
+            "assets/images/halls/pearl_palace/hall2.jpg",
+            "assets/images/halls/pearl_palace/hall3.jpg",
+        ]),
         "category": "Indoor",
         "is_featured": False,
     },
@@ -204,13 +196,11 @@ DEFAULT_HALLS = [
         "phone_number": "03451112233",
         "email": "sunshinevilla@example.com",
         "description": "Budget-friendly hall for intimate gatherings and walima events.",
-        "image_urls": json.dumps(
-            [
-                "assets/images/halls/sunshine_villa/hall1.jpg",
-                "assets/images/halls/sunshine_villa/hall2.jpg",
-                "assets/images/halls/sunshine_villa/hall3.jpg",
-            ]
-        ),
+        "image_urls": json.dumps([
+            "assets/images/halls/sunshine_villa/hall1.jpg",
+            "assets/images/halls/sunshine_villa/hall2.jpg",
+            "assets/images/halls/sunshine_villa/hall3.jpg",
+        ]),
         "category": "Budget",
         "is_featured": False,
     },
@@ -223,12 +213,10 @@ DEFAULT_HALLS = [
         "phone_number": "03005556677",
         "email": "celebrationcenter@example.com",
         "description": "Perfect for birthday parties, anniversaries, and small celebrations.",
-        "image_urls": json.dumps(
-            [
-                "assets/images/halls/celebration_center/hall1.jpg",
-                "assets/images/halls/celebration_center/hall2.jpg",
-            ]
-        ),
+        "image_urls": json.dumps([
+            "assets/images/halls/celebration_center/hall1.jpg",
+            "assets/images/halls/celebration_center/hall2.jpg",
+        ]),
         "category": "Party",
         "is_featured": False,
     },
@@ -241,12 +229,10 @@ DEFAULT_HALLS = [
         "phone_number": "03224445566",
         "email": "corporateplaza@example.com",
         "description": "Professional venue for corporate events, seminars, and conferences.",
-        "image_urls": json.dumps(
-            [
-                "assets/images/halls/corporate_plaza/hall1.jpg",
-                "assets/images/halls/corporate_plaza/hall2.jpg",
-            ]
-        ),
+        "image_urls": json.dumps([
+            "assets/images/halls/corporate_plaza/hall1.jpg",
+            "assets/images/halls/corporate_plaza/hall2.jpg",
+        ]),
         "category": "Corporate",
         "is_featured": True,
     },
@@ -259,12 +245,10 @@ DEFAULT_HALLS = [
         "phone_number": "03337778899",
         "email": "gardenretreat@example.com",
         "description": "Scenic outdoor venue for garden weddings and private parties.",
-        "image_urls": json.dumps(
-            [
-                "assets/images/halls/garden_retreat/hall1.jpg",
-                "assets/images/halls/garden_retreat/hall2.jpg",
-            ]
-        ),
+        "image_urls": json.dumps([
+            "assets/images/halls/garden_retreat/hall1.jpg",
+            "assets/images/halls/garden_retreat/hall2.jpg",
+        ]),
         "category": "Outdoor",
         "is_featured": False,
     },
@@ -277,12 +261,10 @@ DEFAULT_HALLS = [
         "phone_number": "03446667788",
         "email": "heritagehall@example.com",
         "description": "Traditional hall with cultural decor for cultural events and weddings.",
-        "image_urls": json.dumps(
-            [
-                "assets/images/halls/heritage_hall/hall1.jpg",
-                "assets/images/halls/heritage_hall/hall2.jpg",
-            ]
-        ),
+        "image_urls": json.dumps([
+            "assets/images/halls/heritage_hall/hall1.jpg",
+            "assets/images/halls/heritage_hall/hall2.jpg",
+        ]),
         "category": "Cultural",
         "is_featured": False,
     },
@@ -295,12 +277,10 @@ DEFAULT_HALLS = [
         "phone_number": "03008889900",
         "email": "modernarena@example.com",
         "description": "State-of-the-art hall with advanced AV equipment for large events.",
-        "image_urls": json.dumps(
-            [
-                "assets/images/halls/modern_arena/hall1.jpg",
-                "assets/images/halls/modern_arena/hall2.jpg",
-            ]
-        ),
+        "image_urls": json.dumps([
+            "assets/images/halls/modern_arena/hall1.jpg",
+            "assets/images/halls/modern_arena/hall2.jpg",
+        ]),
         "category": "Luxury",
         "is_featured": True,
     },
@@ -313,12 +293,10 @@ DEFAULT_HALLS = [
         "phone_number": "03119990011",
         "email": "cozycorner@example.com",
         "description": "Intimate setting for small family gatherings and ceremonies.",
-        "image_urls": json.dumps(
-            [
-                "assets/images/halls/cozy_corner/hall1.jpg",
-                "assets/images/halls/cozy_corner/hall2.jpg",
-            ]
-        ),
+        "image_urls": json.dumps([
+            "assets/images/halls/cozy_corner/hall1.jpg",
+            "assets/images/halls/cozy_corner/hall2.jpg",
+        ]),
         "category": "Intimate",
         "is_featured": False,
     },
@@ -331,12 +309,10 @@ DEFAULT_HALLS = [
         "phone_number": "03221112233",
         "email": "riversidepavilion@example.com",
         "description": "Riverside location perfect for romantic weddings and receptions.",
-        "image_urls": json.dumps(
-            [
-                "assets/images/halls/riverside_pavilion/hall1.jpg",
-                "assets/images/halls/riverside_pavilion/hall2.jpg",
-            ]
-        ),
+        "image_urls": json.dumps([
+            "assets/images/halls/riverside_pavilion/hall1.jpg",
+            "assets/images/halls/riverside_pavilion/hall2.jpg",
+        ]),
         "category": "Romantic",
         "is_featured": False,
     },
@@ -359,9 +335,12 @@ CITY_COORDINATES = {
 }
 
 
+# ─────────────────────────────────────────────
+#  MODELS
+# ─────────────────────────────────────────────
+
 class MarriageHall(db.Model):
     __tablename__ = "marriage_halls"
-
     hall_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False)
     location = db.Column(db.String(255), nullable=False)
@@ -374,7 +353,6 @@ class MarriageHall(db.Model):
     image_urls = db.Column(db.Text, nullable=False, default="[]")
     category = db.Column(db.String(50), nullable=False, default="Indoor")
     is_featured = db.Column(db.Boolean, nullable=False, default=False)
-
     bookings = db.relationship(
         "Booking", backref="hall", cascade="all, delete-orphan", lazy=True
     )
@@ -382,7 +360,6 @@ class MarriageHall(db.Model):
 
 class Customer(db.Model):
     __tablename__ = "customers"
-
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(255), nullable=False)
     email = db.Column(db.String(255), unique=True, nullable=False)
@@ -391,7 +368,6 @@ class Customer(db.Model):
     favorite_category = db.Column(db.String(50), nullable=False, default="Any")
     profile_image = db.Column(db.Text, nullable=False, default="")
     created_at = db.Column(db.DateTime, nullable=False, default=utc_now)
-
     bookings = db.relationship(
         "Booking", backref="customer", cascade="all, delete-orphan", lazy=True
     )
@@ -399,7 +375,6 @@ class Customer(db.Model):
 
 class Booking(db.Model):
     __tablename__ = "bookings"
-
     hall_booking_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     hall_id = db.Column(db.Integer, db.ForeignKey("marriage_halls.hall_id"), nullable=False)
     customer_id = db.Column(db.Integer, db.ForeignKey("customers.id"), nullable=False)
@@ -410,11 +385,10 @@ class Booking(db.Model):
     guest_count = db.Column(db.Integer, nullable=False, default=100)
     special_request = db.Column(db.Text, nullable=False, default="")
     additional_notes = db.Column(db.Text, nullable=False, default="")
-    menu_items = db.Column(db.Text, nullable=False, default="[]")  # JSON array of {"menu_id": id, "quantity": num}
+    menu_items = db.Column(db.Text, nullable=False, default="[]")  # JSON array
     total_extra_cost = db.Column(db.Numeric(10, 2), nullable=False, default=Decimal("0.00"))
     status = db.Column(db.String(20), nullable=False, default="pending")
     created_at = db.Column(db.DateTime, nullable=False, default=utc_now)
-
     messages = db.relationship(
         "BookingMessage",
         backref="booking",
@@ -426,7 +400,6 @@ class Booking(db.Model):
 
 class BookingMessage(db.Model):
     __tablename__ = "booking_messages"
-
     message_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     booking_id = db.Column(
         db.Integer, db.ForeignKey("bookings.hall_booking_id"), nullable=False
@@ -439,7 +412,6 @@ class BookingMessage(db.Model):
 
 class UserLog(db.Model):
     __tablename__ = "user_logs"
-
     log_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     email = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(50), nullable=False)
@@ -449,7 +421,6 @@ class UserLog(db.Model):
 
 class HallFeedback(db.Model):
     __tablename__ = "hall_feedback"
-
     feedback_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     hall_id = db.Column(
         db.Integer, db.ForeignKey("marriage_halls.hall_id"), nullable=False
@@ -465,7 +436,6 @@ class HallFeedback(db.Model):
 
 class FoodMenu(db.Model):
     __tablename__ = "food_menus"
-
     menu_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     hall_id = db.Column(db.Integer, db.ForeignKey("marriage_halls.hall_id"), nullable=False)
     category = db.Column(db.String(100), nullable=False, default="Main Course")
@@ -474,9 +444,12 @@ class FoodMenu(db.Model):
     description = db.Column(db.Text, default="")
     is_vegetarian = db.Column(db.Boolean, default=False)
     is_available = db.Column(db.Boolean, default=True)
-
     hall = db.relationship("MarriageHall", backref="menus")
 
+
+# ─────────────────────────────────────────────
+#  HELPERS
+# ─────────────────────────────────────────────
 
 def parse_image_urls(value: str | list | None) -> list[str]:
     if isinstance(value, list):
@@ -499,7 +472,6 @@ def validate_registration_payload(data: dict) -> str | None:
     email = str(data.get("email", "")).strip().lower()
     phone = str(data.get("phone", "")).strip()
     password = str(data.get("password", ""))
-
     if not name:
         return "Name is required."
     if not email:
@@ -583,7 +555,7 @@ def menu_to_dict(menu: FoodMenu) -> dict:
 
 def hall_to_dict(hall: MarriageHall) -> dict:
     feedback_summary = hall_feedback_summary(hall.hall_id)
-    menus = [menu_to_dict(menu) for menu in getattr(hall, 'menus', [])[:10]]  # First 10 menus
+    menus = [menu_to_dict(menu) for menu in getattr(hall, 'menus', [])[:10]]
     return {
         "hall_id": hall.hall_id,
         "name": hall.name,
@@ -616,18 +588,10 @@ def feedback_to_dict(feedback: HallFeedback) -> dict:
 
 
 def calculate_adjusted_cost(base_rent: float, guest_count: int) -> float:
-    """
-    Calculate adjusted cost based on guest count.
-    Base setup: 30 people
-    For every additional 30 people: +20,000
-    Formula: base_rent + floor((guest_count - 30) / 30) * 20000 if guest_count > 30
-    """
     BASE_CAPACITY = 30
     COST_PER_30_GUESTS = 20000
-    
     if guest_count <= BASE_CAPACITY:
         return float(base_rent)
-    
     additional_groups = (guest_count - BASE_CAPACITY) // BASE_CAPACITY
     adjusted_cost = float(base_rent) + (additional_groups * COST_PER_30_GUESTS)
     return adjusted_cost
@@ -637,7 +601,6 @@ def booking_to_dict(booking: Booking) -> dict:
     base_rent = float(booking.hall.rent) if booking.hall else 0
     adjusted_cost = calculate_adjusted_cost(base_rent, booking.guest_count)
     total_cost = adjusted_cost + float(booking.total_extra_cost or 0)
-    
     return {
         "hall_booking_id": booking.hall_booking_id,
         "hall_id": booking.hall_id,
@@ -711,8 +674,6 @@ def seed_default_data() -> None:
         for hall in DEFAULT_HALLS:
             db.session.add(MarriageHall(**hall))
         db.session.commit()
-    
-    # Seed Pakistani menus for default halls
     if FoodMenu.query.count() == 0:
         for menu_data in DEFAULT_MENUS:
             db.session.add(FoodMenu(**menu_data))
@@ -727,7 +688,6 @@ def sync_default_halls() -> None:
             db.session.add(MarriageHall(**hall_data))
             changed = True
             continue
-
         if not parse_image_urls(existing_hall.image_urls):
             existing_hall.image_urls = hall_data["image_urls"]
             changed = True
@@ -737,12 +697,12 @@ def sync_default_halls() -> None:
         if not existing_hall.category.strip():
             existing_hall.category = hall_data["category"]
             changed = True
-
     if changed:
         db.session.commit()
 
 
 def ensure_schema() -> None:
+    """Add any missing columns / tables without dropping existing data."""
     with db.engine.begin() as connection:
         hall_columns = {
             row[1] for row in connection.execute(text("PRAGMA table_info(marriage_halls)"))
@@ -779,6 +739,7 @@ def ensure_schema() -> None:
                     "ADD COLUMN total_extra_cost NUMERIC(10,2) NOT NULL DEFAULT 0.00"
                 )
             )
+
         connection.execute(
             text(
                 "CREATE TABLE IF NOT EXISTS booking_messages ("
@@ -838,8 +799,11 @@ def create_booking_message(
     return booking_message
 
 
+# ─────────────────────────────────────────────
+#  EMAIL UTILITIES
+# ─────────────────────────────────────────────
+
 def send_email(to_email: str, subject: str, html_content: str) -> None:
-    """Send an HTML email using SMTP."""
     email_configured = all(
         value
         and "your-email@gmail.com" not in value
@@ -848,7 +812,6 @@ def send_email(to_email: str, subject: str, html_content: str) -> None:
     )
     if not email_configured:
         return
-
     try:
         import smtplib
         from email.mime.multipart import MIMEMultipart
@@ -858,15 +821,12 @@ def send_email(to_email: str, subject: str, html_content: str) -> None:
         msg["Subject"] = subject
         msg["From"] = f"{FROM_NAME} <{FROM_EMAIL}>"
         msg["To"] = to_email
-
         msg.attach(MIMEText(html_content, "html"))
-
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
             server.starttls()
             server.login(SMTP_USERNAME, SMTP_PASSWORD)
             server.sendmail(FROM_EMAIL, to_email, msg.as_string())
     except Exception as e:
-        # Log the email failure but do not stop request processing.
         print(f"Failed to send email to {to_email}: {e}")
 
 
@@ -874,58 +834,21 @@ def send_booking_confirmation_email(
     customer_email: str, booking: Booking, hall: MarriageHall
 ) -> None:
     subject = f"Booking Confirmation | {hall.name}"
-    html_content = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8" />
-      <title>Booking Confirmation</title>
-      <style>
-        body {{ font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 16px; }}
-        .card {{ max-width: 600px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.08); }}
-        .header {{ text-align: center; margin-bottom: 18px; }}
-        .header h1 {{ margin: 0; color: #B6465F; }}
-        .field {{ margin-bottom: 12px; }}
-        .label {{ font-weight: bold; color: #333; }}
-        .value {{ color: #555; }}
-        .footer {{ margin-top: 22px; text-align: center; color: #888; font-size: 13px; }}
-      </style>
-    </head>
-    <body>
-      <div class="card">
-        <div class="header">
-          <h1>Booking Confirmed</h1>
-          <p>Thank you for trusting Shaadi Ghar.</p>
-        </div>
-        <div class="field">
-          <div class="label">Hall</div>
-          <div class="value">{hall.name}</div>
-        </div>
-        <div class="field">
-          <div class="label">Date</div>
-          <div class="value">{booking.booking_date.strftime('%B %d, %Y')}</div>
-        </div>
-        <div class="field">
-          <div class="label">Event type</div>
-          <div class="value">{booking.event_type}</div>
-        </div>
-        <div class="field">
-          <div class="label">Guests</div>
-          <div class="value">{booking.guest_count}</div>
-        </div>
-        <div class="field">
-          <div class="label">Status</div>
-          <div class="value">{booking.status.capitalize()}</div>
-        </div>
-        {f'<div class="field"><div class="label">Special request</div><div class="value">{booking.special_request}</div></div>' if booking.special_request else ''}
-        {f'<div class="field"><div class="label">Additional notes</div><div class="value">{booking.additional_notes}</div></div>' if booking.additional_notes else ''}
-        <div class="footer">
-          <p>If you have questions, reply to this email or contact us at {hall.contact_person} ({hall.phone_number}).</p>
-        </div>
-      </div>
-    </body>
-    </html>
-    """
+    html_content = f"""<!DOCTYPE html><html><head><meta charset="UTF-8"/>
+<style>body{{font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding:16px}}
+.card{{max-width:600px;margin:0 auto;background:#fff;padding:24px;border-radius:12px;box-shadow:0 10px 20px rgba(0,0,0,0.08)}}
+.header{{text-align:center;margin-bottom:18px}}.header h1{{margin:0;color:#B6465F}}
+.field{{margin-bottom:12px}}.label{{font-weight:bold;color:#333}}.value{{color:#555}}
+.footer{{margin-top:22px;text-align:center;color:#888;font-size:13px}}</style></head>
+<body><div class="card"><div class="header"><h1>Booking Confirmed</h1>
+<p>Thank you for trusting Shaadi Ghar.</p></div>
+<div class="field"><div class="label">Hall</div><div class="value">{hall.name}</div></div>
+<div class="field"><div class="label">Date</div><div class="value">{booking.booking_date.strftime('%B %d, %Y')}</div></div>
+<div class="field"><div class="label">Event type</div><div class="value">{booking.event_type}</div></div>
+<div class="field"><div class="label">Guests</div><div class="value">{booking.guest_count}</div></div>
+<div class="field"><div class="label">Status</div><div class="value">{booking.status.capitalize()}</div></div>
+<div class="footer"><p>Contact: {hall.contact_person} ({hall.phone_number})</p></div>
+</div></body></html>"""
     send_email(customer_email, subject, html_content)
 
 
@@ -934,38 +857,17 @@ def send_booking_status_update_email(
 ) -> None:
     status_label = new_status.capitalize()
     subject = f"Booking Update | {booking.hall.name if booking.hall else 'Your booking'}"
-    html_content = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset=\"UTF-8\" />
-      <title>Booking Status Update</title>
-      <style>
-        body {{ font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 16px; }}
-        .card {{ max-width: 600px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.08); }}
-        .header {{ text-align: center; margin-bottom: 18px; }}
-        .header h1 {{ margin: 0; color: #B6465F; }}
-        .badge {{ display: inline-block; padding: 8px 14px; border-radius: 999px; background: #f0f0f0; font-weight: bold; margin-top: 10px; }}
-        .footer {{ margin-top: 22px; text-align: center; color: #888; font-size: 13px; }}
-      </style>
-    </head>
-    <body>
-      <div class=\"card\">
-        <div class=\"header\">
-          <h1>Booking Status Updated</h1>
-          <div class=\"badge\">{status_label}</div>
-        </div>
-        <p>Your booking for <strong>{booking.hall.name if booking.hall else ''}</strong> has been updated to <strong>{status_label}</strong>.</p>
-        <p>
-          If you have questions, please reply to this email or contact the hall management.
-        </p>
-        <div class=\"footer\">
-          <p>Shaadi Ghar Team</p>
-        </div>
-      </div>
-    </body>
-    </html>
-    """
+    html_content = f"""<!DOCTYPE html><html><head><meta charset="UTF-8"/>
+<style>body{{font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding:16px}}
+.card{{max-width:600px;margin:0 auto;background:#fff;padding:24px;border-radius:12px}}
+.header{{text-align:center;margin-bottom:18px}}.header h1{{margin:0;color:#B6465F}}
+.badge{{display:inline-block;padding:8px 14px;border-radius:999px;background:#f0f0f0;font-weight:bold;margin-top:10px}}
+.footer{{margin-top:22px;text-align:center;color:#888;font-size:13px}}</style></head>
+<body><div class="card"><div class="header"><h1>Booking Status Updated</h1>
+<div class="badge">{status_label}</div></div>
+<p>Your booking for <strong>{booking.hall.name if booking.hall else ''}</strong>
+has been updated to <strong>{status_label}</strong>.</p>
+<div class="footer"><p>Shaadi Ghar Team</p></div></div></body></html>"""
     send_email(customer_email, subject, html_content)
 
 
@@ -973,73 +875,44 @@ def send_booking_message_email(
     customer_email: str, booking: Booking, message: str
 ) -> None:
     subject = f"Message about your booking at {booking.hall.name if booking.hall else 'Shaadi Ghar'}"
-    html_content = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset=\"UTF-8\" />
-      <title>Message about your booking</title>
-      <style>
-        body {{ font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 16px; }}
-        .card {{ max-width: 600px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.08); }}
-        .header {{ text-align: center; margin-bottom: 18px; }}
-        .header h1 {{ margin: 0; color: #B6465F; }}
-        .footer {{ margin-top: 22px; text-align: center; color: #888; font-size: 13px; }}
-      </style>
-    </head>
-    <body>
-      <div class=\"card\">
-        <div class=\"header\">
-          <h1>Message about your booking</h1>
-        </div>
-        <p>{message}</p>
-        <div class=\"footer\">
-          <p>Shaadi Ghar Team</p>
-        </div>
-      </div>
-    </body>
-    </html>
-    """
+    html_content = f"""<!DOCTYPE html><html><head><meta charset="UTF-8"/>
+<style>body{{font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding:16px}}
+.card{{max-width:600px;margin:0 auto;background:#fff;padding:24px;border-radius:12px}}
+.header{{text-align:center;margin-bottom:18px}}.header h1{{margin:0;color:#B6465F}}
+.footer{{margin-top:22px;text-align:center;color:#888;font-size:13px}}</style></head>
+<body><div class="card"><div class="header"><h1>Message about your booking</h1></div>
+<p>{message}</p>
+<div class="footer"><p>Shaadi Ghar Team</p></div></div></body></html>"""
     send_email(customer_email, subject, html_content)
 
 
-@app.route("/")
-def home():
-    return jsonify(
-        {
-            "message": "Shaadi Ghar API is running.",
-        }
-    )
-
-
-@app.route("/health")
-def health():
-    return jsonify({"status": "ok", "date": datetime.now(UTC).isoformat()})
-
+# ─────────────────────────────────────────────
+#  ROUTES — Authentication
+# ─────────────────────────────────────────────
 
 @app.route("/register", methods=["POST"])
 def register():
     data = request.get_json(silent=True) or {}
-    validation_error = validate_registration_payload(data)
-    if validation_error:
-        return jsonify({"error": validation_error}), 400
+    error = validate_registration_payload(data)
+    if error:
+        return jsonify({"error": error}), 400
 
     email = str(data["email"]).strip().lower()
     if Customer.query.filter_by(email=email).first():
-        return jsonify({"error": "User already registered."}), 409
+        return jsonify({"error": "Email already registered."}), 409
 
     customer = Customer(
         name=str(data["name"]).strip(),
         email=email,
         phone=str(data["phone"]).strip(),
         password_hash=generate_password_hash(str(data["password"])),
-        favorite_category=str(data.get("favorite_category", "Any")).strip() or "Any",
+        favorite_category=str(data.get("favorite_category", "Any")).strip(),
         profile_image=str(data.get("profile_image", "")).strip(),
     )
     db.session.add(customer)
     db.session.commit()
-    log_action(email, "customer", "Registered new account")
-    return jsonify({"message": "Registration successful. Please log in."}), 201
+    log_action(email, "customer", "registered")
+    return jsonify({"message": "Registration successful.", "customer": customer_to_dict(customer)}), 201
 
 
 @app.route("/login", methods=["POST"])
@@ -1048,370 +921,578 @@ def login():
     email = str(data.get("email", "")).strip().lower()
     password = str(data.get("password", ""))
 
-    if not email or not password:
-        return jsonify({"error": "Email and password are required."}), 400
-
-    if email == ADMIN_EMAIL and password == ADMIN_PASSWORD:
-        log_action(email, "admin", "Logged in")
-        return jsonify(
-            {
-                "message": "Admin login successful.",
-                "role": "admin",
-                "user": {"email": ADMIN_EMAIL, "name": "Administrator"},
-            }
-        )
+    if email == ADMIN_EMAIL.lower() and password == ADMIN_PASSWORD:
+        log_action(email, "admin", "login")
+        return jsonify({"message": "Admin login successful.", "role": "admin", "email": email}), 200
 
     customer = Customer.query.filter_by(email=email).first()
     if not customer or not check_password_hash(customer.password_hash, password):
         return jsonify({"error": "Invalid email or password."}), 401
 
-    log_action(email, "customer", "Logged in")
-    return jsonify(
-        {
-            "message": "Login successful.",
-            "role": "customer",
-            "user": customer_to_dict(customer),
-        }
-    )
+    log_action(email, "customer", "login")
+    return jsonify({"message": "Login successful.", "role": "customer", "customer": customer_to_dict(customer)}), 200
 
+
+# ─────────────────────────────────────────────
+#  ROUTES — Halls
+# ─────────────────────────────────────────────
 
 @app.route("/halls", methods=["GET"])
 def get_halls():
+    location = request.args.get("location", "").strip()
+    category = request.args.get("category", "").strip()
+    featured = request.args.get("featured", "").strip().lower()
+    min_capacity = request.args.get("min_capacity", "").strip()
+    max_rent = request.args.get("max_rent", "").strip()
+    nearby_city = request.args.get("nearby_city", "").strip()
+    radius_km_str = request.args.get("radius_km", "50").strip()
+    search = request.args.get("search", "").strip()
+
     query = MarriageHall.query
 
-    search_term = str(request.args.get("q", "")).strip()
-    city = str(request.args.get("city", "")).strip()
-    nearest_to = str(request.args.get("nearest_to", "")).strip()
-    category = str(request.args.get("category", "")).strip()
-    sort_by = str(request.args.get("sort_by", "featured")).strip().lower()
-    featured = request.args.get("featured")
-    min_capacity = request.args.get("min_capacity", type=int)
-    max_rent = request.args.get("max_rent", type=float)
-
-    if search_term:
-        like_term = f"%{search_term}%"
-        query = query.filter(
-            or_(
-                MarriageHall.name.ilike(like_term),
-                MarriageHall.location.ilike(like_term),
-            )
-        )
-    if city:
-        query = query.filter(MarriageHall.location.ilike(f"%{city}%"))
+    if location:
+        query = query.filter(MarriageHall.location.ilike(f"%{location}%"))
     if category:
         query = query.filter(MarriageHall.category.ilike(f"%{category}%"))
     if featured == "true":
-        query = query.filter_by(is_featured=True)
+        query = query.filter(MarriageHall.is_featured == True)
     if min_capacity:
-        query = query.filter(MarriageHall.capacity >= min_capacity)
+        try:
+            query = query.filter(MarriageHall.capacity >= int(min_capacity))
+        except ValueError:
+            pass
     if max_rent:
-        query = query.filter(MarriageHall.rent <= max_rent)
-
-    halls = query.order_by(MarriageHall.is_featured.desc(), MarriageHall.rent.asc()).all()
-    hall_items = [hall_to_dict(hall) for hall in halls]
-
-    origin = resolve_city_coordinates(nearest_to)
-    if nearest_to and sort_by == "featured" and origin is not None:
-        sort_by = "nearest"
-
-    enriched_items = []
-    for hall_item in hall_items:
-        hall_coordinates = resolve_city_coordinates(hall_item.get("location", ""))
-        distance = (
-            round(distance_km(origin, hall_coordinates), 1)
-            if origin is not None and hall_coordinates is not None
-            else None
-        )
-        hall_item["distance_km"] = distance
-        enriched_items.append(hall_item)
-
-    if sort_by == "price_low":
-        enriched_items.sort(key=lambda item: (item["rent"], item["name"].lower()))
-    elif sort_by == "price_high":
-        enriched_items.sort(key=lambda item: (-item["rent"], item["name"].lower()))
-    elif sort_by == "rating":
-        enriched_items.sort(
-            key=lambda item: (
-                -(item["average_rating"] or 0),
-                -(item["feedback_count"] or 0),
-                item["rent"],
-            )
-        )
-    elif sort_by == "capacity":
-        enriched_items.sort(
-            key=lambda item: (-(item["capacity"] or 0), item["rent"])
-        )
-    elif sort_by == "name":
-        enriched_items.sort(key=lambda item: item["name"].lower())
-    elif sort_by == "nearest" and origin is not None:
-        enriched_items.sort(
-            key=lambda item: (
-                item["distance_km"] is None,
-                item["distance_km"] if item["distance_km"] is not None else 10**9,
-                item["rent"],
-            )
-        )
-    else:
-        enriched_items.sort(
-            key=lambda item: (
-                not bool(item["is_featured"]),
-                item["rent"],
-                item["name"].lower(),
+        try:
+            query = query.filter(MarriageHall.rent <= Decimal(max_rent))
+        except (InvalidOperation, ValueError):
+            pass
+    if search:
+        query = query.filter(
+            or_(
+                MarriageHall.name.ilike(f"%{search}%"),
+                MarriageHall.location.ilike(f"%{search}%"),
+                MarriageHall.description.ilike(f"%{search}%"),
             )
         )
 
-    return jsonify(enriched_items)
+    halls = query.all()
+
+    if nearby_city:
+        city_coords = resolve_city_coordinates(nearby_city)
+        if city_coords:
+            try:
+                radius = float(radius_km_str)
+            except ValueError:
+                radius = 50.0
+            filtered = []
+            for hall in halls:
+                hall_coords = resolve_city_coordinates(hall.location)
+                if hall_coords and distance_km(city_coords, hall_coords) <= radius:
+                    filtered.append(hall)
+            halls = filtered
+
+    return jsonify([hall_to_dict(h) for h in halls]), 200
 
 
-@app.route("/hall/<int:hall_id>/availability", methods=["GET"])
-def get_hall_availability(hall_id: int):
-    hall = db.session.get(MarriageHall, hall_id)
+@app.route("/halls/<int:hall_id>", methods=["GET"])
+def get_hall(hall_id: int):
+    hall = MarriageHall.query.get(hall_id)
     if not hall:
         return jsonify({"error": "Hall not found."}), 404
-
-    today = date.today()
-    booked_dates = {
-        booking.booking_date
-        for booking in Booking.query.filter(
-            Booking.hall_id == hall_id,
-            Booking.status.in_(["pending", "approved"]),
-        ).all()
-    }
-    available_dates = []
-    for offset in range(0, 120):
-        current = today + timedelta(days=offset)
-        if current not in booked_dates:
-            available_dates.append(current.isoformat())
-    return jsonify({"hall": hall_to_dict(hall), "available_dates": available_dates})
+    return jsonify(hall_to_dict(hall)), 200
 
 
-@app.route("/hall/<int:hall_id>/feedback", methods=["GET"])
-def get_hall_feedback(hall_id: int):
-    hall = db.session.get(MarriageHall, hall_id)
-    if not hall:
-        return jsonify({"error": "Hall not found."}), 404
-    return jsonify(hall_feedback_summary(hall_id))
+@app.route("/halls", methods=["POST"])
+def create_hall():
+    data = request.get_json(silent=True) or {}
+    name = str(data.get("name", "")).strip()
+    location = str(data.get("location", "")).strip()
+    if not name or not location:
+        return jsonify({"error": "Name and location are required."}), 400
+
+    capacity, err = parse_positive_int(data.get("capacity", 1), "Capacity")
+    if err:
+        return jsonify({"error": err}), 400
+    rent, err = parse_non_negative_decimal(data.get("rent", 0), "Rent")
+    if err:
+        return jsonify({"error": err}), 400
+
+    raw_images = data.get("image_urls", [])
+    image_urls_json = json.dumps(parse_image_urls(raw_images))
+
+    hall = MarriageHall(
+        name=name,
+        location=location,
+        capacity=capacity,
+        rent=rent,
+        contact_person=str(data.get("contact_person", "")).strip(),
+        phone_number=str(data.get("phone_number", "")).strip(),
+        email=str(data.get("email", "")).strip(),
+        description=str(data.get("description", "")).strip(),
+        image_urls=image_urls_json,
+        category=str(data.get("category", "Indoor")).strip(),
+        is_featured=bool(data.get("is_featured", False)),
+    )
+    db.session.add(hall)
+    db.session.commit()
+    return jsonify({"message": "Hall created.", "hall": hall_to_dict(hall)}), 201
 
 
-@app.route("/hall/<int:hall_id>/feedback", methods=["POST"])
-def submit_hall_feedback(hall_id: int):
-    hall = db.session.get(MarriageHall, hall_id)
+@app.route("/halls/<int:hall_id>", methods=["PUT"])
+def update_hall(hall_id: int):
+    hall = MarriageHall.query.get(hall_id)
     if not hall:
         return jsonify({"error": "Hall not found."}), 404
 
     data = request.get_json(silent=True) or {}
-    customer_id, customer_id_error = parse_positive_int(
-        data.get("customer_id"), "Customer ID"
-    )
-    if customer_id_error:
-        return jsonify({"error": customer_id_error}), 400
 
-    customer = db.session.get(Customer, customer_id)
+    if "name" in data:
+        hall.name = str(data["name"]).strip()
+    if "location" in data:
+        hall.location = str(data["location"]).strip()
+    if "capacity" in data:
+        capacity, err = parse_positive_int(data["capacity"], "Capacity")
+        if err:
+            return jsonify({"error": err}), 400
+        hall.capacity = capacity
+    if "rent" in data:
+        rent, err = parse_non_negative_decimal(data["rent"], "Rent")
+        if err:
+            return jsonify({"error": err}), 400
+        hall.rent = rent
+    if "contact_person" in data:
+        hall.contact_person = str(data["contact_person"]).strip()
+    if "phone_number" in data:
+        hall.phone_number = str(data["phone_number"]).strip()
+    if "email" in data:
+        hall.email = str(data["email"]).strip()
+    if "description" in data:
+        hall.description = str(data["description"]).strip()
+    if "image_urls" in data:
+        hall.image_urls = json.dumps(parse_image_urls(data["image_urls"]))
+    if "category" in data:
+        hall.category = str(data["category"]).strip()
+    if "is_featured" in data:
+        hall.is_featured = bool(data["is_featured"])
+
+    db.session.commit()
+    return jsonify({"message": "Hall updated.", "hall": hall_to_dict(hall)}), 200
+
+
+@app.route("/halls/<int:hall_id>", methods=["DELETE"])
+def delete_hall(hall_id: int):
+    hall = MarriageHall.query.get(hall_id)
+    if not hall:
+        return jsonify({"error": "Hall not found."}), 404
+    db.session.delete(hall)
+    db.session.commit()
+    return jsonify({"message": "Hall deleted."}), 200
+
+
+# ─────────────────────────────────────────────
+#  ROUTES — Bookings
+# ─────────────────────────────────────────────
+
+@app.route("/bookings", methods=["POST"])
+def create_booking():
+    data = request.get_json(silent=True) or {}
+
+    hall_id, err = parse_positive_int(data.get("hall_id"), "Hall ID")
+    if err:
+        return jsonify({"error": err}), 400
+    customer_id, err = parse_positive_int(data.get("customer_id"), "Customer ID")
+    if err:
+        return jsonify({"error": err}), 400
+
+    hall = MarriageHall.query.get(hall_id)
+    if not hall:
+        return jsonify({"error": "Hall not found."}), 404
+    customer = Customer.query.get(customer_id)
     if not customer:
         return jsonify({"error": "Customer not found."}), 404
 
-    existing_booking = Booking.query.filter_by(
-        hall_id=hall_id,
-        customer_id=customer_id,
-    ).first()
-    if existing_booking is None:
-        return jsonify(
-            {"error": "You can leave feedback after making a booking for this hall."}
-        ), 403
-
-    rating, rating_error = parse_positive_int(data.get("rating"), "Rating")
-    if rating_error:
-        return jsonify({"error": rating_error}), 400
-    if rating is None or rating > 5:
-        return jsonify({"error": "Rating must be between 1 and 5."}), 400
-
-    comment = str(data.get("comment", "")).strip()
-    if not comment:
-        return jsonify({"error": "Feedback comment is required."}), 400
-
-    existing_feedback = HallFeedback.query.filter_by(
-        hall_id=hall_id,
-        customer_id=customer_id,
-    ).first()
-    if existing_feedback is not None:
-        existing_feedback.rating = rating
-        existing_feedback.comment = comment
-        existing_feedback.customer_name = customer.name
-        existing_feedback.created_at = utc_now()
-        db.session.commit()
-        log_action(customer.email, "customer", f"Updated feedback for hall #{hall_id}")
-        return jsonify(
-            {
-                "message": "Feedback updated successfully.",
-                "feedback": feedback_to_dict(existing_feedback),
-                "summary": hall_feedback_summary(hall_id),
-            }
-        )
-
-    feedback = HallFeedback(
-        hall_id=hall_id,
-        customer_id=customer.id,
-        customer_name=customer.name,
-        rating=rating,
-        comment=comment,
-    )
-    db.session.add(feedback)
-    db.session.commit()
-    log_action(customer.email, "customer", f"Submitted feedback for hall #{hall_id}")
-    return jsonify(
-        {
-            "message": "Feedback submitted successfully.",
-            "feedback": feedback_to_dict(feedback),
-            "summary": hall_feedback_summary(hall_id),
-        }
-    ), 201
-
-
-@app.route("/book", methods=["POST"])
-def book_hall():
-    data = request.get_json(silent=True) or {}
-    hall_id, hall_id_error = parse_positive_int(data.get("hall_id"), "Hall ID")
-    customer_id, customer_id_error = parse_positive_int(
-        data.get("customer_id"), "Customer ID"
-    )
-    booking_date_raw = str(data.get("booking_date", "")).strip()
-
-    if hall_id_error:
-        return jsonify({"error": hall_id_error}), 400
-    if customer_id_error:
-        return jsonify({"error": customer_id_error}), 400
-    if not booking_date_raw:
-        return jsonify({"error": "Hall, customer, and booking date are required."}), 400
-
-    guest_count, guest_count_error = parse_positive_int(
-        data.get("guest_count", 100), "Guest count"
-    )
-    if guest_count_error:
-        return jsonify({"error": guest_count_error}), 400
-
-    hall = db.session.get(MarriageHall, hall_id)
-    customer = db.session.get(Customer, customer_id)
-    if not hall:
-        return jsonify({"error": "Selected hall does not exist."}), 404
-    if not customer:
-        return jsonify({"error": "Customer account not found."}), 404
-
+    booking_date_str = str(data.get("booking_date", "")).strip()
     try:
-        booking_date_value = datetime.strptime(booking_date_raw, "%Y-%m-%d").date()
+        booking_date = date.fromisoformat(booking_date_str)
     except ValueError:
-        return jsonify({"error": "Booking date must use YYYY-MM-DD format."}), 400
+        return jsonify({"error": "booking_date must be YYYY-MM-DD."}), 400
 
-    if booking_date_value < date.today():
+    if booking_date < date.today():
         return jsonify({"error": "Booking date cannot be in the past."}), 400
 
-    existing_booking = Booking.query.filter(
-        Booking.hall_id == hall_id,
-        Booking.booking_date == booking_date_value,
-        Booking.status.in_(["pending", "approved"]),
-    ).first()
-    if existing_booking:
-        return jsonify({"error": "This hall is already booked for that date."}), 409
+    conflict = Booking.query.filter_by(
+        hall_id=hall_id, booking_date=booking_date
+    ).filter(Booking.status != "cancelled").first()
+    if conflict:
+        return jsonify({"error": "Hall is already booked for this date."}), 409
 
-    menu_items_data = data.get("menu_items", [])
+    guest_count, err = parse_positive_int(data.get("guest_count", 100), "Guest count")
+    if err:
+        return jsonify({"error": err}), 400
+
+    menu_items_raw = data.get("menu_items", [])
+    if not isinstance(menu_items_raw, list):
+        menu_items_raw = []
+
     total_extra_cost = Decimal("0.00")
-    if menu_items_data:
-        for item in menu_items_data:
-            menu_id = item.get("menu_id")
-            quantity = item.get("quantity", 0)
-            if menu_id and quantity > 0:
-                menu = FoodMenu.query.get(menu_id)
-                if menu:
-                    total_extra_cost += menu.price_per_plate * quantity
+    valid_menu_items = []
+    for item in menu_items_raw:
+        menu_id = item.get("menu_id")
+        quantity = item.get("quantity", 1)
+        menu = FoodMenu.query.get(menu_id) if menu_id else None
+        if menu and menu.is_available:
+            qty = max(1, int(quantity))
+            total_extra_cost += menu.price_per_plate * qty
+            valid_menu_items.append({"menu_id": menu.menu_id, "quantity": qty})
 
     booking = Booking(
         hall_id=hall_id,
-        customer_id=customer.id,
-        customer_name=customer.name,
-        customer_contact_number=customer.phone,
-        booking_date=booking_date_value,
-        event_type=str(data.get("event_type", "Wedding")).strip() or "Wedding",
+        customer_id=customer_id,
+        customer_name=str(data.get("customer_name", customer.name)).strip(),
+        customer_contact_number=str(data.get("customer_contact_number", customer.phone)).strip(),
+        booking_date=booking_date,
+        event_type=str(data.get("event_type", "Wedding")).strip(),
         guest_count=guest_count,
         special_request=str(data.get("special_request", "")).strip(),
         additional_notes=str(data.get("additional_notes", "")).strip(),
-        menu_items=json.dumps(menu_items_data),
+        menu_items=json.dumps(valid_menu_items),
         total_extra_cost=total_extra_cost,
         status="pending",
     )
     db.session.add(booking)
     db.session.commit()
-    log_action(customer.email, "customer", f"Created booking #{booking.hall_booking_id}")
 
-    # Send confirmation email (best-effort)
-    try:
-        send_booking_confirmation_email(customer.email, booking, hall)
-    except Exception:
-        pass
-
-    return jsonify({"message": "Booking request submitted.", "booking": booking_to_dict(booking)}), 201
+    send_booking_confirmation_email(customer.email, booking, hall)
+    log_action(customer.email, "customer", f"booked hall {hall_id} on {booking_date}")
+    return jsonify({"message": "Booking created.", "booking": booking_to_dict(booking)}), 201
 
 
-@app.route("/customer/bookings/<int:customer_id>", methods=["GET"])
-def customer_bookings(customer_id: int):
-    customer = db.session.get(Customer, customer_id)
-    if not customer:
-        return jsonify({"error": "Customer not found."}), 404
-    bookings = (
-        Booking.query.filter_by(customer_id=customer_id)
-        .order_by(Booking.booking_date.asc())
-        .all()
-    )
-    return jsonify([booking_to_dict(booking) for booking in bookings])
+@app.route("/bookings", methods=["GET"])
+def get_bookings():
+    customer_id = request.args.get("customer_id", "").strip()
+    hall_id = request.args.get("hall_id", "").strip()
+    status = request.args.get("status", "").strip()
+
+    query = Booking.query
+    if customer_id:
+        query = query.filter_by(customer_id=int(customer_id))
+    if hall_id:
+        query = query.filter_by(hall_id=int(hall_id))
+    if status:
+        query = query.filter_by(status=status)
+
+    bookings = query.order_by(Booking.created_at.desc()).all()
+    return jsonify([booking_to_dict(b) for b in bookings]), 200
 
 
-@app.route("/customer/cancel_booking/<int:booking_id>", methods=["PUT"])
-def cancel_customer_booking(booking_id: int):
-    data = request.get_json(silent=True) or {}
-    customer_id = data.get("customer_id")
-
-    if not customer_id:
-        return jsonify({"error": "Customer ID is required."}), 400
-
-    booking = Booking.query.filter_by(
-        hall_booking_id=booking_id, customer_id=customer_id
-    ).first()
+@app.route("/bookings/<int:booking_id>", methods=["GET"])
+def get_booking(booking_id: int):
+    booking = Booking.query.get(booking_id)
     if not booking:
         return jsonify({"error": "Booking not found."}), 404
-    if booking.status != "pending":
-        return jsonify({"error": "Only pending bookings can be cancelled."}), 400
+    return jsonify(booking_to_dict(booking)), 200
 
+
+@app.route("/bookings/<int:booking_id>/status", methods=["PUT"])
+def update_booking_status(booking_id: int):
+    booking = Booking.query.get(booking_id)
+    if not booking:
+        return jsonify({"error": "Booking not found."}), 404
+
+    data = request.get_json(silent=True) or {}
+    new_status = str(data.get("status", "")).strip().lower()
+    valid_statuses = {"pending", "confirmed", "cancelled", "completed"}
+    if new_status not in valid_statuses:
+        return jsonify({"error": f"Status must be one of {sorted(valid_statuses)}."}), 400
+
+    booking.status = new_status
+    db.session.commit()
+
+    customer = Customer.query.get(booking.customer_id)
+    if customer:
+        send_booking_status_update_email(customer.email, booking, new_status)
+
+    log_action(ADMIN_EMAIL, "admin", f"updated booking {booking_id} status to {new_status}")
+    return jsonify({"message": "Status updated.", "booking": booking_to_dict(booking)}), 200
+
+
+@app.route("/bookings/<int:booking_id>", methods=["DELETE"])
+def cancel_booking(booking_id: int):
+    booking = Booking.query.get(booking_id)
+    if not booking:
+        return jsonify({"error": "Booking not found."}), 404
     booking.status = "cancelled"
     db.session.commit()
-    if booking.customer:
-        log_action(
-            booking.customer.email,
-            "customer",
-            f"Cancelled booking #{booking.hall_booking_id}",
-        )
-    return jsonify(
-        {"message": "Booking cancelled successfully.", "booking": booking_to_dict(booking)}
-    )
+    return jsonify({"message": "Booking cancelled."}), 200
 
 
-@app.route("/customer/profile/<int:customer_id>", methods=["GET", "PUT"])
-def customer_profile(customer_id: int):
-    customer = db.session.get(Customer, customer_id)
+@app.route("/bookings/<int:booking_id>/availability", methods=["GET"])
+def check_availability(booking_id: int):
+    booking = Booking.query.get(booking_id)
+    if not booking:
+        return jsonify({"error": "Booking not found."}), 404
+    return jsonify({"available": booking.status == "pending"}), 200
+
+
+@app.route("/halls/<int:hall_id>/availability", methods=["GET"])
+def hall_availability(hall_id: int):
+    hall = MarriageHall.query.get(hall_id)
+    if not hall:
+        return jsonify({"error": "Hall not found."}), 404
+
+    month_str = request.args.get("month", "").strip()
+    year_str = request.args.get("year", "").strip()
+
+    try:
+        month = int(month_str) if month_str else datetime.utcnow().month
+        year = int(year_str) if year_str else datetime.utcnow().year
+    except ValueError:
+        return jsonify({"error": "Invalid month or year."}), 400
+
+    booked = Booking.query.filter(
+        Booking.hall_id == hall_id,
+        Booking.status != "cancelled",
+        db.extract("month", Booking.booking_date) == month,
+        db.extract("year", Booking.booking_date) == year,
+    ).all()
+
+    booked_dates = [b.booking_date.isoformat() for b in booked]
+    return jsonify({"hall_id": hall_id, "month": month, "year": year, "booked_dates": booked_dates}), 200
+
+
+# ─────────────────────────────────────────────
+#  ROUTES — Messages
+# ─────────────────────────────────────────────
+
+@app.route("/bookings/<int:booking_id>/messages", methods=["POST"])
+def add_booking_message(booking_id: int):
+    booking = Booking.query.get(booking_id)
+    if not booking:
+        return jsonify({"error": "Booking not found."}), 404
+
+    data = request.get_json(silent=True) or {}
+    sender_role = str(data.get("sender_role", "")).strip()
+    sender_name = str(data.get("sender_name", "")).strip()
+    message_text = str(data.get("message", "")).strip()
+
+    if not sender_role or not message_text:
+        return jsonify({"error": "sender_role and message are required."}), 400
+
+    msg = create_booking_message(booking, sender_role, sender_name, message_text)
+
+    if sender_role == "admin":
+        customer = Customer.query.get(booking.customer_id)
+        if customer:
+            send_booking_message_email(customer.email, booking, message_text)
+
+    return jsonify({"message": "Message sent.", "booking_message": booking_message_to_dict(msg)}), 201
+
+
+@app.route("/bookings/<int:booking_id>/messages", methods=["GET"])
+def get_booking_messages(booking_id: int):
+    booking = Booking.query.get(booking_id)
+    if not booking:
+        return jsonify({"error": "Booking not found."}), 404
+    return jsonify([booking_message_to_dict(m) for m in booking.messages]), 200
+
+
+# ─────────────────────────────────────────────
+#  ROUTES — Feedback
+# ─────────────────────────────────────────────
+
+@app.route("/halls/<int:hall_id>/feedback", methods=["POST"])
+def add_feedback(hall_id: int):
+    hall = MarriageHall.query.get(hall_id)
+    if not hall:
+        return jsonify({"error": "Hall not found."}), 404
+
+    data = request.get_json(silent=True) or {}
+    customer_id = data.get("customer_id")
+    rating = data.get("rating")
+    comment = str(data.get("comment", "")).strip()
+    customer_name = str(data.get("customer_name", "")).strip()
+
+    if not customer_id or rating is None:
+        return jsonify({"error": "customer_id and rating are required."}), 400
+
+    try:
+        rating = int(rating)
+    except (TypeError, ValueError):
+        return jsonify({"error": "Rating must be an integer."}), 400
+
+    if not (1 <= rating <= 5):
+        return jsonify({"error": "Rating must be between 1 and 5."}), 400
+
+    customer = Customer.query.get(customer_id)
     if not customer:
         return jsonify({"error": "Customer not found."}), 404
 
-    if request.method == "GET":
-        return jsonify(customer_to_dict(customer))
+    feedback = HallFeedback(
+        hall_id=hall_id,
+        customer_id=customer_id,
+        customer_name=customer_name or customer.name,
+        rating=rating,
+        comment=comment,
+    )
+    db.session.add(feedback)
+    db.session.commit()
+    return jsonify({"message": "Feedback submitted.", "feedback": feedback_to_dict(feedback)}), 201
+
+
+@app.route("/halls/<int:hall_id>/feedback", methods=["GET"])
+def get_feedback(hall_id: int):
+    hall = MarriageHall.query.get(hall_id)
+    if not hall:
+        return jsonify({"error": "Hall not found."}), 404
+    return jsonify(hall_feedback_summary(hall_id)), 200
+
+
+# ─────────────────────────────────────────────
+#  ROUTES — Food Menus
+# ─────────────────────────────────────────────
+
+@app.route("/halls/<int:hall_id>/menus", methods=["GET"])
+def get_hall_menus(hall_id: int):
+    hall = MarriageHall.query.get(hall_id)
+    if not hall:
+        return jsonify({"error": "Hall not found."}), 404
+    menus = FoodMenu.query.filter_by(hall_id=hall_id).all()
+    return jsonify([menu_to_dict(m) for m in menus]), 200
+
+
+@app.route("/halls/<int:hall_id>/menus", methods=["POST"])
+def add_menu_item(hall_id: int):
+    hall = MarriageHall.query.get(hall_id)
+    if not hall:
+        return jsonify({"error": "Hall not found."}), 404
 
     data = request.get_json(silent=True) or {}
-    customer.name = str(data.get("name", customer.name)).strip() or customer.name
-    customer.phone = str(data.get("phone", customer.phone)).strip() or customer.phone
-    customer.favorite_category = (
-        str(data.get("favorite_category", customer.favorite_category)).strip()
-        or customer.favorite_category
+    item_name = str(data.get("item_name", "")).strip()
+    if not item_name:
+        return jsonify({"error": "item_name is required."}), 400
+
+    price, err = parse_non_negative_decimal(data.get("price_per_plate", 0), "Price per plate")
+    if err:
+        return jsonify({"error": err}), 400
+
+    menu = FoodMenu(
+        hall_id=hall_id,
+        category=str(data.get("category", "Main Course")).strip(),
+        item_name=item_name,
+        price_per_plate=price,
+        description=str(data.get("description", "")).strip(),
+        is_vegetarian=bool(data.get("is_vegetarian", False)),
+        is_available=bool(data.get("is_available", True)),
     )
-    customer.profile_image = str(data.get("profile_image", customer.profile_image)).strip()
+    db.session.add(menu)
     db.session.commit()
-    log_action(customer.email, "customer", "Updated profile")
-    return jsonify({"message": "Profile updated.", "user": customer_to_dict(customer)})
+    return jsonify({"message": "Menu item added.", "menu": menu_to_dict(menu)}), 201
+
+
+@app.route("/menus/<int:menu_id>", methods=["PUT"])
+def update_menu_item(menu_id: int):
+    menu = FoodMenu.query.get(menu_id)
+    if not menu:
+        return jsonify({"error": "Menu item not found."}), 404
+
+    data = request.get_json(silent=True) or {}
+    if "item_name" in data:
+        menu.item_name = str(data["item_name"]).strip()
+    if "category" in data:
+        menu.category = str(data["category"]).strip()
+    if "price_per_plate" in data:
+        price, err = parse_non_negative_decimal(data["price_per_plate"], "Price per plate")
+        if err:
+            return jsonify({"error": err}), 400
+        menu.price_per_plate = price
+    if "description" in data:
+        menu.description = str(data["description"]).strip()
+    if "is_vegetarian" in data:
+        menu.is_vegetarian = bool(data["is_vegetarian"])
+    if "is_available" in data:
+        menu.is_available = bool(data["is_available"])
+
+    db.session.commit()
+    return jsonify({"message": "Menu item updated.", "menu": menu_to_dict(menu)}), 200
+
+
+@app.route("/menus/<int:menu_id>", methods=["DELETE"])
+def delete_menu_item(menu_id: int):
+    menu = FoodMenu.query.get(menu_id)
+    if not menu:
+        return jsonify({"error": "Menu item not found."}), 404
+    db.session.delete(menu)
+    db.session.commit()
+    return jsonify({"message": "Menu item deleted."}), 200
+
+
+# ─────────────────────────────────────────────
+#  ROUTES — Customers
+# ─────────────────────────────────────────────
+
+@app.route("/customers", methods=["GET"])
+def get_customers():
+    customers = Customer.query.order_by(Customer.created_at.desc()).all()
+    return jsonify([customer_to_dict(c) for c in customers]), 200
+
+
+@app.route("/customers/<int:customer_id>", methods=["GET"])
+def get_customer(customer_id: int):
+    customer = Customer.query.get(customer_id)
+    if not customer:
+        return jsonify({"error": "Customer not found."}), 404
+    return jsonify(customer_to_dict(customer)), 200
+
+
+@app.route("/customers/<int:customer_id>", methods=["PUT"])
+def update_customer(customer_id: int):
+    customer = Customer.query.get(customer_id)
+    if not customer:
+        return jsonify({"error": "Customer not found."}), 404
+
+    data = request.get_json(silent=True) or {}
+    if "name" in data:
+        customer.name = str(data["name"]).strip()
+    if "phone" in data:
+        customer.phone = str(data["phone"]).strip()
+    if "favorite_category" in data:
+        customer.favorite_category = str(data["favorite_category"]).strip()
+    if "profile_image" in data:
+        customer.profile_image = str(data["profile_image"]).strip()
+    if "password" in data and data["password"]:
+        customer.password_hash = generate_password_hash(str(data["password"]))
+
+    db.session.commit()
+    return jsonify({"message": "Profile updated.", "customer": customer_to_dict(customer)}), 200
+
+
+@app.route("/customers/<int:customer_id>", methods=["DELETE"])
+def delete_customer(customer_id: int):
+    customer = Customer.query.get(customer_id)
+    if not customer:
+        return jsonify({"error": "Customer not found."}), 404
+    db.session.delete(customer)
+    db.session.commit()
+    return jsonify({"message": "Customer deleted."}), 200
+
+
+# ─────────────────────────────────────────────
+#  ROUTES — Admin / Logs
+# ─────────────────────────────────────────────
+
+@app.route("/admin/logs", methods=["GET"])
+def get_logs():
+    logs = UserLog.query.order_by(UserLog.timestamp.desc()).limit(200).all()
+    return jsonify([
+        {
+            "log_id": log.log_id,
+            "email": log.email,
+            "role": log.role,
+            "action": log.action,
+            "timestamp": log.timestamp.isoformat(),
+        }
+        for log in logs
+    ]), 200
 
 
 @app.route("/admin/stats", methods=["GET"])
@@ -1419,381 +1500,41 @@ def admin_stats():
     total_halls = MarriageHall.query.count()
     total_customers = Customer.query.count()
     total_bookings = Booking.query.count()
-    pending_bookings = Booking.query.filter_by(status="pending").count()
-    approved_bookings = Booking.query.filter_by(status="approved").count()
-    return jsonify(
-        {
-            "total_halls": total_halls,
-            "total_customers": total_customers,
-            "total_bookings": total_bookings,
-            "pending_bookings": pending_bookings,
-            "approved_bookings": approved_bookings,
-        }
-    )
+    pending = Booking.query.filter_by(status="pending").count()
+    confirmed = Booking.query.filter_by(status="confirmed").count()
+    cancelled = Booking.query.filter_by(status="cancelled").count()
+    completed = Booking.query.filter_by(status="completed").count()
+    return jsonify({
+        "total_halls": total_halls,
+        "total_customers": total_customers,
+        "total_bookings": total_bookings,
+        "bookings_by_status": {
+            "pending": pending,
+            "confirmed": confirmed,
+            "cancelled": cancelled,
+            "completed": completed,
+        },
+    }), 200
 
 
-@app.route("/admin/bookings", methods=["GET"])
-def admin_bookings():
-    bookings = Booking.query.order_by(Booking.created_at.desc()).all()
-    return jsonify([booking_to_dict(booking) for booking in bookings])
+# ─────────────────────────────────────────────
+#  ROUTES — Health check
+# ─────────────────────────────────────────────
+
+@app.route("/", methods=["GET"])
+def health_check():
+    return jsonify({"status": "ok", "message": "Shaadi Ghar API is running (SQLite)."}), 200
 
 
-@app.route("/admin/update_booking/<int:booking_id>", methods=["PUT"])
-def update_booking(booking_id: int):
-    booking = db.session.get(Booking, booking_id)
-    if not booking:
-        return jsonify({"error": "Booking not found."}), 404
-
-    status = str((request.get_json(silent=True) or {}).get("status", "")).strip().lower()
-    if status not in {"pending", "approved", "rejected", "cancelled"}:
-        return jsonify({"error": "Status must be pending, approved, rejected, or cancelled."}), 400
-
-    booking.status = status
-    db.session.commit()
-    log_action(ADMIN_EMAIL, "admin", f"Updated booking #{booking_id} to {status}")
-
-    try:
-        if booking.customer:
-            send_booking_status_update_email(booking.customer.email, booking, status)
-    except Exception:
-        pass
-
-    return jsonify({"message": "Booking status updated.", "booking": booking_to_dict(booking)})
-
-
-@app.route("/admin/send_booking_message/<int:booking_id>", methods=["POST"])
-def send_booking_message(booking_id: int):
-    booking = db.session.get(Booking, booking_id)
-    if not booking:
-        return jsonify({"error": "Booking not found."}), 404
-
-    data = request.get_json(silent=True) or {}
-    message = str(data.get("message", "")).strip()
-    if not message:
-        return jsonify({"error": "Message is required."}), 400
-
-    booking_message = create_booking_message(booking, "admin", "Admin", message)
-
-    try:
-        if booking.customer:
-            send_booking_message_email(booking.customer.email, booking, message)
-            log_action(ADMIN_EMAIL, "admin", f"Sent message for booking #{booking_id}")
-            return jsonify(
-                {
-                    "message": "Message sent.",
-                    "booking_message": booking_message_to_dict(booking_message),
-                }
-            )
-        return jsonify({"error": "Booking has no associated customer."}), 400
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route("/customer/send_booking_message/<int:booking_id>", methods=["POST"])
-def customer_send_booking_message(booking_id: int):
-    booking = db.session.get(Booking, booking_id)
-    if not booking:
-        return jsonify({"error": "Booking not found."}), 404
-
-    data = request.get_json(silent=True) or {}
-    customer_id, customer_id_error = parse_positive_int(
-        data.get("customer_id"), "Customer ID"
-    )
-    if customer_id_error:
-        return jsonify({"error": customer_id_error}), 400
-    if booking.customer_id != customer_id:
-        return jsonify({"error": "This booking does not belong to that customer."}), 403
-
-    message = str(data.get("message", "")).strip()
-    if not message:
-        return jsonify({"error": "Message is required."}), 400
-
-    booking_message = create_booking_message(
-        booking,
-        "customer",
-        booking.customer_name or "Customer",
-        message,
-    )
-    if booking.customer:
-        log_action(
-            booking.customer.email,
-            "customer",
-            f"Sent message for booking #{booking_id}",
-        )
-    return jsonify(
-        {
-            "message": "Message sent.",
-            "booking_message": booking_message_to_dict(booking_message),
-        }
-    )
-
-
-@app.route("/admin/halls", methods=["POST"])
-def add_hall():
-    data = request.get_json(silent=True) or {}
-    required_fields = [
-        "name",
-        "location",
-        "capacity",
-        "rent",
-        "contact_person",
-        "phone_number",
-        "email",
-    ]
-    for field in required_fields:
-        if not str(data.get(field, "")).strip():
-            return jsonify({"error": f"{field.replace('_', ' ').title()} is required."}), 400
-
-    capacity, capacity_error = parse_positive_int(data.get("capacity"), "Capacity")
-    if capacity_error:
-        return jsonify({"error": capacity_error}), 400
-
-    rent, rent_error = parse_non_negative_decimal(data.get("rent"), "Rent")
-    if rent_error:
-        return jsonify({"error": rent_error}), 400
-
-    hall = MarriageHall(
-        name=str(data["name"]).strip(),
-        location=str(data["location"]).strip(),
-        capacity=capacity,
-        rent=rent,
-        contact_person=str(data["contact_person"]).strip(),
-        phone_number=str(data["phone_number"]).strip(),
-        email=str(data["email"]).strip(),
-        description=str(data.get("description", "")).strip(),
-        image_urls=json.dumps(parse_image_urls(data.get("image_urls", []))),
-        category=str(data.get("category", "Indoor")).strip() or "Indoor",
-        is_featured=bool(data.get("is_featured", False)),
-    )
-    db.session.add(hall)
-    db.session.commit()
-    log_action(ADMIN_EMAIL, "admin", f"Added hall {hall.name}")
-    return jsonify({"message": "Hall added successfully.", "hall": hall_to_dict(hall)}), 201
-
-
-@app.route("/admin/update_hall/<int:hall_id>", methods=["PUT"])
-def update_hall(hall_id: int):
-    hall = db.session.get(MarriageHall, hall_id)
-    if not hall:
-        return jsonify({"error": "Hall not found."}), 404
-
-    data = request.get_json(silent=True) or {}
-    capacity, capacity_error = parse_positive_int(
-        data.get("capacity", hall.capacity), "Capacity"
-    )
-    if capacity_error:
-        return jsonify({"error": capacity_error}), 400
-
-    rent, rent_error = parse_non_negative_decimal(data.get("rent", hall.rent), "Rent")
-    if rent_error:
-        return jsonify({"error": rent_error}), 400
-
-    hall.name = str(data.get("name", hall.name)).strip() or hall.name
-    hall.location = str(data.get("location", hall.location)).strip() or hall.location
-    hall.capacity = capacity
-    hall.rent = rent
-    hall.contact_person = (
-        str(data.get("contact_person", hall.contact_person)).strip() or hall.contact_person
-    )
-    hall.phone_number = (
-        str(data.get("phone_number", hall.phone_number)).strip() or hall.phone_number
-    )
-    hall.email = str(data.get("email", hall.email)).strip() or hall.email
-    hall.description = str(data.get("description", hall.description)).strip()
-    hall.image_urls = json.dumps(parse_image_urls(data.get("image_urls", hall.image_urls)))
-    hall.category = str(data.get("category", hall.category)).strip() or hall.category
-    hall.is_featured = bool(data.get("is_featured", hall.is_featured))
-    db.session.commit()
-    log_action(ADMIN_EMAIL, "admin", f"Updated hall #{hall_id}")
-    return jsonify({"message": "Hall updated successfully.", "hall": hall_to_dict(hall)})
-
-
-@app.route("/admin/delete_hall/<int:hall_id>", methods=["DELETE"])
-def delete_hall(hall_id: int):
-    hall = db.session.get(MarriageHall, hall_id)
-    if not hall:
-        return jsonify({"error": "Hall not found."}), 404
-    db.session.delete(hall)
-    db.session.commit()
-    log_action(ADMIN_EMAIL, "admin", f"Deleted hall #{hall_id}")
-    return jsonify({"message": "Hall deleted successfully."})
-
-
-@app.route("/admin/customers", methods=["GET"])
-def get_customers():
-    customers = Customer.query.order_by(Customer.created_at.desc()).all()
-    return jsonify([customer_to_dict(customer) for customer in customers])
-
-
-@app.route("/hall/<int:hall_id>/menus", methods=["GET"])
-def get_hall_menus(hall_id: int):
-    hall = db.session.get(MarriageHall, hall_id)
-    if not hall:
-        return jsonify({"error": "Hall not found."}), 404
-    menus = FoodMenu.query.filter_by(hall_id=hall_id, is_available=True).order_by(FoodMenu.category, FoodMenu.item_name).all()
-    return jsonify([menu_to_dict(menu) for menu in menus])
-
-
-@app.route("/admin/halls/<int:hall_id>/menus", methods=["POST"])
-def add_menu_item(hall_id: int):
-    hall = db.session.get(MarriageHall, hall_id)
-    if not hall:
-        return jsonify({"error": "Hall not found."}), 404
-    
-    data = request.get_json() or {}
-    menu = FoodMenu(
-        hall_id=hall_id,
-        category=str(data.get("category", "Main Course")),
-        item_name=str(data["item_name"]),
-        price_per_plate=Decimal(str(data["price_per_plate"])),
-        description=str(data.get("description", "")),
-        is_vegetarian=bool(data.get("is_vegetarian", False)),
-        is_available=bool(data.get("is_available", True)),
-    )
-    db.session.add(menu)
-    db.session.commit()
-    log_action(ADMIN_EMAIL, "admin", f"Added menu item {menu.item_name} for hall #{hall_id}")
-    return jsonify({"message": "Menu item added.", "menu": menu_to_dict(menu)}), 201
-
-
-@app.route("/admin/halls/<int:hall_id>/menus/<int:menu_id>", methods=["PUT"])
-def update_menu_item(hall_id: int, menu_id: int):
-    menu = db.session.get(FoodMenu, menu_id)
-    if not menu or menu.hall_id != hall_id:
-        return jsonify({"error": "Menu item not found."}), 404
-    
-    data = request.get_json() or {}
-    menu.category = str(data.get("category", menu.category))
-    menu.item_name = str(data.get("item_name", menu.item_name))
-    menu.price_per_plate = Decimal(str(data.get("price_per_plate", menu.price_per_plate)))
-    menu.description = str(data.get("description", menu.description))
-    menu.is_vegetarian = bool(data.get("is_vegetarian", menu.is_vegetarian))
-    menu.is_available = bool(data.get("is_available", menu.is_available))
-    db.session.commit()
-    log_action(ADMIN_EMAIL, "admin", f"Updated menu item #{menu_id}")
-    return jsonify({"message": "Menu item updated.", "menu": menu_to_dict(menu)})
-
-
-@app.route("/admin/halls/<int:hall_id>/menus/<int:menu_id>", methods=["DELETE"])
-def delete_menu_item(hall_id: int, menu_id: int):
-    menu = db.session.get(FoodMenu, menu_id)
-    if not menu or menu.hall_id != hall_id:
-        return jsonify({"error": "Menu item not found."}), 404
-    item_name = menu.item_name
-    db.session.delete(menu)
-    db.session.commit()
-    log_action(ADMIN_EMAIL, "admin", f"Deleted menu item {item_name}")
-    return jsonify({"message": "Menu item deleted."})
-
-
-@app.route("/booking/<int:booking_id>/request_cancel", methods=["POST"])
-def request_cancel(booking_id: int):
-    booking = db.session.get(Booking, booking_id)
-    if not booking:
-        return jsonify({"error": "Booking not found."}), 404
-    
-    data = request.get_json() or {}
-    customer_id = data.get("customer_id")
-    reason = str(data.get("reason", ""))
-    
-    if booking.customer_id != customer_id:
-        return jsonify({"error": "Unauthorized."}), 403
-    
-    if booking.status not in ["pending", "approved"]:
-        return jsonify({"error": "Cannot cancel this booking status."}), 400
-    
-    # Policy: >1 week before date
-    days_to_event = (booking.booking_date - date.today()).days
-    if days_to_event <= 7:
-        return jsonify({"error": "Cancellation allowed only more than 1 week before event."}), 400
-    
-    booking.status = "cancel_requested"
-    create_booking_message(booking, "customer", booking.customer_name, f"Cancel request: {reason}")
-    db.session.commit()
-    return jsonify({"message": "Cancel request submitted for admin review.", "booking": booking_to_dict(booking)})
-
-
-@app.route("/booking/<int:booking_id>/update_date", methods=["PUT"])
-def update_booking_date(booking_id: int):
-    booking = db.session.get(Booking, booking_id)
-    if not booking:
-        return jsonify({"error": "Booking not found."}), 404
-    
-    data = request.get_json() or {}
-    customer_id = data.get("customer_id")
-    new_date_str = str(data["new_date"])
-    
-    if booking.customer_id != customer_id:
-        return jsonify({"error": "Unauthorized."}), 403
-    
-    try:
-        new_date = datetime.strptime(new_date_str, "%Y-%m-%d").date()
-    except ValueError:
-        return jsonify({"error": "Invalid date format."}), 400
-    
-    # Check availability
-    conflict = Booking.query.filter(
-        Booking.hall_id == booking.hall_id,
-        Booking.booking_date == new_date,
-        Booking.status.in_(["pending", "approved"]),
-        Booking.hall_booking_id != booking_id
-    ).first()
-    if conflict:
-        return jsonify({"error": "Date not available."}), 409
-    
-    old_date = booking.booking_date
-    booking.booking_date = new_date
-    create_booking_message(booking, "customer", booking.customer_name, f"Date change request: {old_date.isoformat()} to {new_date.isoformat()}")
-    db.session.commit()
-    return jsonify({"message": "Date update requested (admin approval needed).", "booking": booking_to_dict(booking)})
-
-
-@app.route("/booking/<int:booking_id>/update_guests", methods=["PUT"])
-def update_booking_guests(booking_id: int):
-    booking = db.session.get(Booking, booking_id)
-    if not booking:
-        return jsonify({"error": "Booking not found."}), 404
-    
-    data = request.get_json() or {}
-    customer_id = data.get("customer_id")
-    new_guests = int(data["new_guest_count"])
-    
-    if booking.customer_id != customer_id:
-        return jsonify({"error": "Unauthorized."}), 403
-    
-    if new_guests < 1 or new_guests > booking.hall.capacity * 2:  # Reasonable limit
-        return jsonify({"error": "Invalid guest count."}), 400
-    
-    booking.guest_count = new_guests
-    base_rent = float(booking.hall.rent)
-    booking.adjusted_cost = Decimal(str(calculate_adjusted_cost(base_rent, new_guests)))  # Wait, add adjusted_cost field if needed
-    create_booking_message(booking, "customer", booking.customer_name, f"Guest count changed to {new_guests}")
-    db.session.commit()
-    return jsonify({"message": "Guest count updated (admin approval needed).", "booking": booking_to_dict(booking)})
-
-
-@app.route("/admin/logs", methods=["GET"])
-def get_logs():
-    logs = UserLog.query.order_by(UserLog.timestamp.desc()).limit(200).all()
-    return jsonify(
-        [
-            {
-                "email": log.email,
-                "role": log.role,
-                "action": log.action,
-                "timestamp": log.timestamp.isoformat(),
-            }
-            for log in logs
-        ]
-    )
-
+# ─────────────────────────────────────────────
+#  APP STARTUP
+# ─────────────────────────────────────────────
 
 with app.app_context():
     db.create_all()
     ensure_schema()
-    seed_default_data()
     sync_default_halls()
-
+    seed_default_data()
 
 if __name__ == "__main__":
-    app.run(debug=False, host="0.0.0.0", port=5000)
+    app.run(debug=True)
