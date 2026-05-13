@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import os
-from datetime import UTC, date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 from math import asin, cos, radians, sin, sqrt
 
@@ -14,17 +14,43 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from dotenv import load_dotenv
 
 app = Flask(__name__)
-load_dotenv()
-
-CORS(app, resources={r"/*": {"origins": "*"}})
-
-# ─────────────────────────────────────────────
-#  DATABASE — pure SQLite (works locally AND on PythonAnywhere)
-# ─────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "app.db")
-app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{DB_PATH}"
+
+# Prefer the nested project .env when running from the workspace root.
+env_path = os.path.join(BASE_DIR, "Hall management system", "Hall management system", ".env")
+load_dotenv(env_path if os.path.exists(env_path) else None)
+
+CORS(
+    app,
+    resources={r"/*": {"origins": "*"}},
+    supports_credentials=True,
+    allow_headers=["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+    methods=["GET", "HEAD", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"],
+)
+
+@app.after_request
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, Accept"
+    response.headers["Access-Control-Allow-Methods"] = "GET, HEAD, POST, OPTIONS, PUT, PATCH, DELETE"
+    return response
+
+# ─────────────────────────────────────────────
+#  DATABASE — SQL Server (MHDB)
+# ─────────────────────────────────────────────
+SQL_SERVER = os.getenv("SQL_SERVER", r"localhost\SQLEXPRESS")
+SQL_DATABASE = os.getenv("SQL_DATABASE", "MHDB")
+SQL_DRIVER = os.getenv("SQL_DRIVER", "ODBC Driver 17 for SQL Server")
+app.config["SQLALCHEMY_DATABASE_URI"] = (
+    f"mssql+pyodbc://{SQL_SERVER}/{SQL_DATABASE}"
+    f"?driver={SQL_DRIVER.replace(' ', '+')}"
+    f"&trusted_connection=yes"
+)
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+    "fast_executemany": True,
+    "pool_pre_ping": True,
+}
 
 db = SQLAlchemy(app)
 
@@ -42,7 +68,13 @@ FROM_NAME = "Shaadi Ghar"
 
 # Serve Flutter web assets (images) so Image.network can display them in web.
 _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-_FLUTTER_ASSETS_DIR = os.path.join(_BASE_DIR, "hall_booking_app", "assets")
+_FLUTTER_ASSETS_DIR = os.path.join(
+    _BASE_DIR,
+    "Hall management system",
+    "Hall management system",
+    "hall_booking_app",
+    "assets",
+)
 
 
 @app.route("/app_assets/<path:relpath>")
@@ -58,7 +90,7 @@ def app_assets(relpath: str):
 
 
 def utc_now() -> datetime:
-    return datetime.now(UTC).replace(tzinfo=None)
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 DEFAULT_MENUS = [
@@ -1234,6 +1266,7 @@ def check_availability(booking_id: int):
     return jsonify({"available": booking.status == "pending"}), 200
 
 
+@app.route("/hall/<int:hall_id>/availability", methods=["GET"])
 @app.route("/halls/<int:hall_id>/availability", methods=["GET"])
 def hall_availability(hall_id: int):
     hall = MarriageHall.query.get(hall_id)
@@ -1257,7 +1290,22 @@ def hall_availability(hall_id: int):
     ).all()
 
     booked_dates = [b.booking_date.isoformat() for b in booked]
-    return jsonify({"hall_id": hall_id, "month": month, "year": year, "booked_dates": booked_dates}), 200
+    next_month = datetime(year + (month // 12), (month % 12) + 1, 1).date()
+    last_day = next_month - timedelta(days=1)
+    available_dates = []
+    current = datetime(year, month, 1).date()
+    while current <= last_day:
+        if current.isoformat() not in booked_dates:
+            available_dates.append(current.isoformat())
+        current += timedelta(days=1)
+
+    return jsonify({
+        "hall_id": hall_id,
+        "month": month,
+        "year": year,
+        "booked_dates": booked_dates,
+        "available_dates": available_dates,
+    }), 200
 
 
 # ─────────────────────────────────────────────
@@ -1300,6 +1348,7 @@ def get_booking_messages(booking_id: int):
 #  ROUTES — Feedback
 # ─────────────────────────────────────────────
 
+@app.route("/hall/<int:hall_id>/feedback", methods=["POST"])
 @app.route("/halls/<int:hall_id>/feedback", methods=["POST"])
 def add_feedback(hall_id: int):
     hall = MarriageHall.query.get(hall_id)
@@ -1339,6 +1388,7 @@ def add_feedback(hall_id: int):
     return jsonify({"message": "Feedback submitted.", "feedback": feedback_to_dict(feedback)}), 201
 
 
+@app.route("/hall/<int:hall_id>/feedback", methods=["GET"])
 @app.route("/halls/<int:hall_id>/feedback", methods=["GET"])
 def get_feedback(hall_id: int):
     hall = MarriageHall.query.get(hall_id)
@@ -1351,6 +1401,7 @@ def get_feedback(hall_id: int):
 #  ROUTES — Food Menus
 # ─────────────────────────────────────────────
 
+@app.route("/hall/<int:hall_id>/menus", methods=["GET"])
 @app.route("/halls/<int:hall_id>/menus", methods=["GET"])
 def get_hall_menus(hall_id: int):
     hall = MarriageHall.query.get(hall_id)
@@ -1360,6 +1411,7 @@ def get_hall_menus(hall_id: int):
     return jsonify([menu_to_dict(m) for m in menus]), 200
 
 
+@app.route("/hall/<int:hall_id>/menus", methods=["POST"])
 @app.route("/halls/<int:hall_id>/menus", methods=["POST"])
 def add_menu_item(hall_id: int):
     hall = MarriageHall.query.get(hall_id)
@@ -1537,4 +1589,4 @@ with app.app_context():
     seed_default_data()
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host="127.0.0.1", port=5000)

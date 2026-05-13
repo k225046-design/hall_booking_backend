@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import os
-from datetime import UTC, date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 from math import asin, cos, radians, sin, sqrt
 
@@ -17,7 +17,22 @@ from dotenv import load_dotenv
 app = Flask(__name__)
 load_dotenv()
 CORS(app, resources={r"/*": {"origins": "*"}})
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///hallbooking.db"
+
+# SQL Server connection (MHDB)
+# Change these if your SQL Server has different settings
+SQL_SERVER = os.getenv('SQL_SERVER', 'localhost')
+SQL_DATABASE = os.getenv('SQL_DATABASE', 'MHDB')
+SQL_USER = os.getenv('SQL_USER', '')  # Leave empty for Windows Auth
+SQL_PASSWORD = os.getenv('SQL_PASSWORD', '')
+
+# Connection string for SQL Server
+if SQL_USER and SQL_PASSWORD:
+    connection_string = f"mssql+pyodbc://{SQL_USER}:{SQL_PASSWORD}@{SQL_SERVER}/{SQL_DATABASE}?driver=ODBC+Driver+17+for+SQL+Server"
+else:
+    # Windows Authentication
+    connection_string = f"mssql+pyodbc://@{SQL_SERVER}/{SQL_DATABASE}?driver=ODBC+Driver+17+for+SQL+Server&Trusted_Connection=yes"
+
+app.config["SQLALCHEMY_DATABASE_URI"] = connection_string
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
@@ -53,7 +68,7 @@ def app_assets(relpath: str):
 
 
 def utc_now() -> datetime:
-    return datetime.now(UTC).replace(tzinfo=None)
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 DEFAULT_MENUS = [
     # Pakistani Wedding Menu - Comprehensive Desi Menu
@@ -130,9 +145,9 @@ DEFAULT_HALLS = [
         "description": "Grand indoor venue with bridal lounge and stage lighting.",
         "image_urls": json.dumps(
             [
-                "assets/images/halls/royal_fort/hall1.jpg",
-                "assets/images/halls/royal_fort/hall2.jpg",
-                "assets/images/halls/royal_fort/hall3.jpg",
+                "images/halls/royal_fort/hall1.jpg",
+                "images/halls/royal_fort/hall2.jpg",
+                "images/halls/royal_fort/hall3.jpg",
             ]
         ),
         "category": "Luxury",
@@ -149,9 +164,9 @@ DEFAULT_HALLS = [
         "description": "Open-air garden hall suited for weddings and mehndi events.",
         "image_urls": json.dumps(
             [
-                "assets/images/halls/dream_garden/hall1.jpg",
-                "assets/images/halls/dream_garden/hall2.jpg",
-                "assets/images/halls/dream_garden/hall3.jpg",
+                "images/halls/dream_garden/hall1.jpg",
+                "images/halls/dream_garden/hall2.jpg",
+                "images/halls/dream_garden/hall3.jpg",
             ]
         ),
         "category": "Outdoor",
@@ -168,9 +183,9 @@ DEFAULT_HALLS = [
         "description": "Stylish wedding hall with ambient lighting, modern decor, and spacious dining.",
         "image_urls": json.dumps(
             [
-                "assets/images/halls/galaxy/hall1.jpg",
-                "assets/images/halls/galaxy/hall2.jpg",
-                "assets/images/halls/galaxy/hall3.jpg",
+                "images/halls/galaxy/hall1.jpg",
+                "images/halls/galaxy/hall2.jpg",
+                "images/halls/galaxy/hall3.jpg",
             ]
         ),
         "category": "Luxury",
@@ -187,9 +202,9 @@ DEFAULT_HALLS = [
         "description": "Modern banquet hall with valet parking and family suites.",
         "image_urls": json.dumps(
             [
-                "assets/images/halls/pearl_palace/hall1.jpg",
-                "assets/images/halls/pearl_palace/hall2.jpg",
-                "assets/images/halls/pearl_palace/hall3.jpg",
+                "images/halls/pearl_palace/hall1.jpg",
+                "images/halls/pearl_palace/hall2.jpg",
+                "images/halls/pearl_palace/hall3.jpg",
             ]
         ),
         "category": "Indoor",
@@ -206,9 +221,9 @@ DEFAULT_HALLS = [
         "description": "Budget-friendly hall for intimate gatherings and walima events.",
         "image_urls": json.dumps(
             [
-                "assets/images/halls/sunshine_villa/hall1.jpg",
-                "assets/images/halls/sunshine_villa/hall2.jpg",
-                "assets/images/halls/sunshine_villa/hall3.jpg",
+                "images/halls/sunshine_villa/hall1.jpg",
+                "images/halls/sunshine_villa/hall2.jpg",
+                "images/halls/sunshine_villa/hall3.jpg",
             ]
         ),
         "category": "Budget",
@@ -225,8 +240,8 @@ DEFAULT_HALLS = [
         "description": "Perfect for birthday parties, anniversaries, and small celebrations.",
         "image_urls": json.dumps(
             [
-                "assets/images/halls/celebration_center/hall1.jpg",
-                "assets/images/halls/celebration_center/hall2.jpg",
+                "images/halls/celebration_center/hall1.jpg",
+                "images/halls/celebration_center/hall2.jpg",
             ]
         ),
         "category": "Party",
@@ -243,8 +258,8 @@ DEFAULT_HALLS = [
         "description": "Professional venue for corporate events, seminars, and conferences.",
         "image_urls": json.dumps(
             [
-                "assets/images/halls/corporate_plaza/hall1.jpg",
-                "assets/images/halls/corporate_plaza/hall2.jpg",
+                "images/halls/corporate_plaza/hall1.jpg",
+                "images/halls/corporate_plaza/hall2.jpg",
             ]
         ),
         "category": "Corporate",
@@ -261,8 +276,8 @@ DEFAULT_HALLS = [
         "description": "Scenic outdoor venue for garden weddings and private parties.",
         "image_urls": json.dumps(
             [
-                "assets/images/halls/garden_retreat/hall1.jpg",
-                "assets/images/halls/garden_retreat/hall2.jpg",
+                "images/halls/garden_retreat/hall1.jpg",
+                "images/halls/garden_retreat/hall2.jpg",
             ]
         ),
         "category": "Outdoor",
@@ -279,8 +294,8 @@ DEFAULT_HALLS = [
         "description": "Traditional hall with cultural decor for cultural events and weddings.",
         "image_urls": json.dumps(
             [
-                "assets/images/halls/heritage_hall/hall1.jpg",
-                "assets/images/halls/heritage_hall/hall2.jpg",
+                "images/halls/heritage_hall/hall1.jpg",
+                "images/halls/heritage_hall/hall2.jpg",
             ]
         ),
         "category": "Cultural",
@@ -297,8 +312,8 @@ DEFAULT_HALLS = [
         "description": "State-of-the-art hall with advanced AV equipment for large events.",
         "image_urls": json.dumps(
             [
-                "assets/images/halls/modern_arena/hall1.jpg",
-                "assets/images/halls/modern_arena/hall2.jpg",
+                "images/halls/modern_arena/hall1.jpg",
+                "images/halls/modern_arena/hall2.jpg",
             ]
         ),
         "category": "Luxury",
@@ -315,8 +330,8 @@ DEFAULT_HALLS = [
         "description": "Intimate setting for small family gatherings and ceremonies.",
         "image_urls": json.dumps(
             [
-                "assets/images/halls/cozy_corner/hall1.jpg",
-                "assets/images/halls/cozy_corner/hall2.jpg",
+                "images/halls/cozy_corner/hall1.jpg",
+                "images/halls/cozy_corner/hall2.jpg",
             ]
         ),
         "category": "Intimate",
@@ -333,8 +348,8 @@ DEFAULT_HALLS = [
         "description": "Riverside location perfect for romantic weddings and receptions.",
         "image_urls": json.dumps(
             [
-                "assets/images/halls/riverside_pavilion/hall1.jpg",
-                "assets/images/halls/riverside_pavilion/hall2.jpg",
+                "images/halls/riverside_pavilion/hall1.jpg",
+                "images/halls/riverside_pavilion/hall2.jpg",
             ]
         ),
         "category": "Romantic",
@@ -717,6 +732,19 @@ def seed_default_data() -> None:
         for menu_data in DEFAULT_MENUS:
             db.session.add(FoodMenu(**menu_data))
         db.session.commit()
+    
+    # Seed test customer if none exist
+    if Customer.query.count() == 0:
+        test_customer = Customer(
+            name="Test Customer",
+            email="test@example.com",
+            phone="03001234567",
+            password_hash=generate_password_hash("test123"),
+            favorite_category="Luxury",
+            profile_image="",
+        )
+        db.session.add(test_customer)
+        db.session.commit()
 
 
 def sync_default_halls() -> None:
@@ -1014,32 +1042,37 @@ def home():
 
 @app.route("/health")
 def health():
-    return jsonify({"status": "ok", "date": datetime.now(UTC).isoformat()})
+    return jsonify({"status": "ok", "date": datetime.now(timezone.utc).isoformat()})
 
 
 @app.route("/register", methods=["POST"])
 def register():
-    data = request.get_json(silent=True) or {}
-    validation_error = validate_registration_payload(data)
-    if validation_error:
-        return jsonify({"error": validation_error}), 400
+    try:
+        data = request.get_json(silent=True) or {}
+        validation_error = validate_registration_payload(data)
+        if validation_error:
+            return jsonify({"error": validation_error}), 400
 
-    email = str(data["email"]).strip().lower()
-    if Customer.query.filter_by(email=email).first():
-        return jsonify({"error": "User already registered."}), 409
+        email = str(data["email"]).strip().lower()
+        if Customer.query.filter_by(email=email).first():
+            return jsonify({"error": "User already registered."}), 409
 
-    customer = Customer(
-        name=str(data["name"]).strip(),
-        email=email,
-        phone=str(data["phone"]).strip(),
-        password_hash=generate_password_hash(str(data["password"])),
-        favorite_category=str(data.get("favorite_category", "Any")).strip() or "Any",
-        profile_image=str(data.get("profile_image", "")).strip(),
-    )
-    db.session.add(customer)
-    db.session.commit()
-    log_action(email, "customer", "Registered new account")
-    return jsonify({"message": "Registration successful. Please log in."}), 201
+        customer = Customer(
+            name=str(data["name"]).strip(),
+            email=email,
+            phone=str(data["phone"]).strip(),
+            password_hash=generate_password_hash(str(data["password"])),
+            favorite_category=str(data.get("favorite_category", "Any")).strip() or "Any",
+            profile_image=str(data.get("profile_image", "")).strip(),
+        )
+        db.session.add(customer)
+        db.session.commit()
+        log_action(email, "customer", "Registered new account")
+        return jsonify({"message": "Registration successful. Please log in."}), 201
+    except Exception as e:
+        db.session.rollback()
+        print(f"Registration error: {str(e)}")
+        return jsonify({"error": f"Registration failed: {str(e)}"}), 500
 
 
 @app.route("/login", methods=["POST"])
@@ -1267,7 +1300,7 @@ def submit_hall_feedback(hall_id: int):
     ), 201
 
 
-@app.route("/book", methods=["POST"])
+@app.route("/book", methods=["POST", "OPTIONS"])
 def book_hall():
     data = request.get_json(silent=True) or {}
     hall_id, hall_id_error = parse_positive_int(data.get("hall_id"), "Hall ID")
@@ -1797,3 +1830,4 @@ with app.app_context():
 
 if __name__ == "__main__":
     app.run(debug=False, host="0.0.0.0", port=5000)
+
