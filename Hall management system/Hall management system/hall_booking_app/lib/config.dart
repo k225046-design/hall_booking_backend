@@ -6,5 +6,5 @@ String get baseUrl {
     return configuredBaseUrl;
   }
 
-  return 'http://localhost:5000';
+  return 'https://Hallbooking.pythonanywhere.com';
 }
